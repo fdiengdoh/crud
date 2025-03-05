@@ -50,8 +50,8 @@ project-root/
 #### 1. Clone the Repository
    
   ```bash
-  git clone https://github.com/yourusername/your-blog-app.git
-  cd your-blog-app
+  git clone https://github.com/fdiengdoh/crud.git
+  cd crud
   ```
 #### 2. Install Dependencies
 
@@ -91,7 +91,7 @@ HOME_POST=blog,technology,web-design
 ENVIRONMENT=development
 ```
 #### 4. Create a Database
-This app uses MySQL so you'll need to create a database for this app (eg. crud_fdh)
+This app uses a modified [MySQL.sql](MySQL.sql) file that add `posts`, `user_profile`, `categories` etc to use for the `CRUD` application so you'll need to create a *database* for this app (eg. crud_fdh) and the MySQL file will be installed automatically as described below.
 
 #### 5. Install the Database and Default Admin User
 Assumming your webserver is at ```http://localhost``` then open your browser and navigate to:
@@ -116,7 +116,7 @@ Ensure your document root is set to the public_html/ directory, then visit [http
   All environment variables from .env are auto-loaded in init.php and defined as constants, making them available throughout your application.
 
 #### - Admin & Auth:
-  The app uses delight-im/auth for user authentication and role management. Adjust settings as needed.
+  The app uses delight-im/auth for user authentication and role management. Adjust settings as needed. You can access admin area by visiting ```http:localhost/admin``` in your browser. A non admin user can login to the app by visitin ```http://localhost/login```
 
 #### - Routing:
   The ```public/index.php``` acts as a central router to dispatch requests to the appropriate pages in the ```app/``` directory.
