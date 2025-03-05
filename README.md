@@ -137,7 +137,7 @@ Ensure your document root is set to the `public_html/` directory, then visit [ht
   All environment variables from `.env` are auto-loaded in `init.php` and defined as constants, making them available throughout your application.
 
 #### - Admin & Auth:
-  The app uses `delight-im/auth` for user authentication and role management. Here I've used only three roles (Admin, Author and Subscriber). Adjust settings as needed. You can access admin area by visiting `http:localhost/admin` in your browser. A non admin user can login to the app by visitin `http://localhost/login`
+  The app uses `delight-im/auth` for user authentication and role management. Here I've used only three roles (Admin, Author and Subscriber). Adjust settings as needed. You can access admin area by visiting `http:localhost/admin` in your browser. A non admin user can login to the app by visiting `http://localhost/login`
 
 #### - Routing:
   Using `.htaccess` file to write pretty  url and the `public_html/index.php` acts as a central router to dispatch requests to the appropriate pages in the `app/` directory.
@@ -146,3 +146,6 @@ Ensure your document root is set to the `public_html/` directory, then visit [ht
 
 ### Next Steps
 Once the installation and initial setup are complete, you can further customize the application or review security and performance enhancements before moving to production.
+
+### Future Enhancement
+Separate admin and other users file. As of now this app still mixed both even though access rights is set via `Roles`
