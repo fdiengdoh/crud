@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS `user_profiles` (
   `bio` TEXT,
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` DATETIME DEFAULT NULL,
-  `profile_picture` varchar(255) DEFAULT '/assets/default-profile.png',
+  `profile_picture` varchar(255) DEFAULT '/assets/profile/profile.png',
   FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
