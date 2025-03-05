@@ -2,7 +2,7 @@
 This is a PHP-based Blog App that uses PSR-4 autoloading, delight-im/auth for authentication, and a custom architecture to manage posts, categories, profiles, comments, and more.
 
 # Theme
-This app is styled using [Bootstrap 5.3](https://getbootstrap.com) and modified some colour scheme, some theme files are kept in `[public_html](public_html)` directory. 
+This app is styled using [Bootstrap 5.3](https://getbootstrap.com) and modified some colour scheme, some theme files are kept in [public_html](public_html) directory. 
 
 ## File Structure
 
