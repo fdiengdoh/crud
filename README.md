@@ -35,7 +35,7 @@ project-root/
 │   ├── single-post.php          # Public single post page
 │   ├── profile.php              # Public user profile page
 │   └── 404.php                  # Custom 404 error page
-└── public/                      # Public directory (document root)
+└── public_html/                      # Public directory (document root)
     ├── .htaccess               # URL rewriting rules
     ├── index.php               # Front controller / central router
     ├── image/                  # Folder for uploaded images
@@ -94,7 +94,7 @@ ENVIRONMENT=development
 This app uses a modified [MySQL.sql](MySQL.sql) file that add `posts`, `user_profile`, `categories` etc to use for the `CRUD` application so you'll need to create a *database* for this app (eg. crud_fdh) and the MySQL file will be installed automatically as described below.
 
 #### 5. Install the Database and Default Admin User
-Assumming your webserver is at ```http://localhost``` then open your browser and navigate to:
+Assumming your webserver is at `http://localhost` then open your browser and navigate to:
 
 ```
 http://localhost/install.php
@@ -105,23 +105,23 @@ http://localhost/install.php
   -  Create necessary database tables.
   -  Create a default admin user.
   -  Display a verification link if email confirmation is required.
-> [!IMPORTANT]
+> [!CAUTION]
 > Important: For security, remove or secure the install.php script after installation.
 
 #### 6. Use your App
-Ensure your document root is set to the public_html/ directory, then visit [http://localhost/](http://localhost) in your browser.
+Ensure your document root is set to the `public_html/` directory, then visit [http://localhost/](http://localhost) in your browser.
 
 ### Additional Notes
 #### - Environment Variables:
-  All environment variables from .env are auto-loaded in init.php and defined as constants, making them available throughout your application.
+  All environment variables from `.env` are auto-loaded in `init.php` and defined as constants, making them available throughout your application.
 
 #### - Admin & Auth:
-  The app uses delight-im/auth for user authentication and role management. Adjust settings as needed. You can access admin area by visiting ```http:localhost/admin``` in your browser. A non admin user can login to the app by visitin ```http://localhost/login```
+  The app uses `delight-im/auth` for user authentication and role management. Adjust settings as needed. You can access admin area by visiting `http:localhost/admin` in your browser. A non admin user can login to the app by visitin `http://localhost/login`
 
 #### - Routing:
-  The ```public/index.php``` acts as a central router to dispatch requests to the appropriate pages in the ```app/``` directory.
+  Using `.htaccess` file to write pretty  url and the `public_html/index.php` acts as a central router to dispatch requests to the appropriate pages in the `app/` directory.
 #### - Assets:
-  Ensure the ```public/image/``` and ```public/js/vendor/tinymce/``` directories exist and have the correct permissions.
+  Ensure the `public_html/image/` and `public_html/js/vendor/tinymce/` directories exist and have the correct permissions.
 
 ### Next Steps
 Once the installation and initial setup are complete, you can further customize the application or review security and performance enhancements before moving to production.
