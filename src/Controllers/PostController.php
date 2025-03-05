@@ -321,36 +321,6 @@ class PostController {
         return $stmt->execute($params);
     }
 
-    /*/ Update an existing post with additional fields.
-    // If a new feature image is provided (non-null), update it; otherwise, leave it unchanged.
-    // Optional parameters: $slug, $description, $keywords.
-    public function update($postId, $title, $content, $featureImage = null, $slug = '', $description = '', $keywords = '', $createdAt = null) {
-        // If slug is empty, auto-generate from the title
-        if (empty($slug)) {
-            $slug = $this->slugify($title);
-        }
-        // If description is empty, auto-generate from the first 100 characters of the content
-        if (empty($description)) {
-            $description = substr(strip_tags($content), 0, 100);
-        }
-
-        if ($featureImage !== null) {
-            $stmt = $this->pdo->prepare("
-                UPDATE posts 
-                SET title = ?, content = ?, slug = ?, description = ?, keywords = ?, feature_image = ?, updated_at = NOW() 
-                WHERE id = ?
-            ");
-            return $stmt->execute([$title, $content, $slug, $description, $keywords, $featureImage, $postId]);
-        } else {
-            $stmt = $this->pdo->prepare("
-                UPDATE posts 
-                SET title = ?, content = ?, slug = ?, description = ?, keywords = ?, updated_at = NOW() 
-                WHERE id = ?
-            ");
-            return $stmt->execute([$title, $content, $slug, $description, $keywords, $postId]);
-        }
-    }*/
-
     // Instead of deleting, change post status to 'draft'
     public function delete($postId) {
         $stmt = $this->pdo->prepare("UPDATE posts SET status = 'draft', updated_at = NOW() WHERE id = ?");
