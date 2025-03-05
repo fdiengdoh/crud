@@ -48,9 +48,6 @@ switch ($requestUri) {
         $authController->logout();
         header("Location: /login");
         exit;
-    case '/posts':
-        require APP_DIR . '/posts.php';
-        exit;
     case '/post-create':
         require APP_DIR . '/admin/post-create.php';
         exit;
