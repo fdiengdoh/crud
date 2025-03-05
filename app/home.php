@@ -61,7 +61,7 @@ include APP_DIR . '/include/header.php';
 <!-- Slider via Carousel Ends -->
 <?php endif; ?>
 <main>
-<div class="row">
+<div class="row m-0">
    <!-- Main Area Content -->
    <div class="col-md-8">
       <div class="container">

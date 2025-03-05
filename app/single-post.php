@@ -54,7 +54,7 @@ include APP_DIR . '/include/header.php';
 
 ?>
 <main>
-            <div class="row">
+            <div class="row m-0">
                <div class="col-md-8">
                   <!-- Article Section Start -->
                   <article class="p-3 ">
@@ -72,55 +72,48 @@ include APP_DIR . '/include/header.php';
                   <!-- Article Section Ends -->
                    <!-- Random Blog Start-->
                    <div class="container">
-                     <div class="row"> <!-- Row Start -->
-
-                        <div class="col"> <!-- Col Start -->
+                     <div class="row py-2">
+                        <div class="h5 text-uppercase"><i class="bi bi-vector-pen"></i> Author: <a href="<?= BASE_URL ?>/profile/<?= $post['username'] ?>"><?= $post['first_name'] . ' ' . $post['last_name'] ?></a></div>
+                        <div class="col-lg-2 text-center">
+                           <img src="<?= BASE_URL ?>/<?= $post['profile_picture'] ?>" class="img-fluid rounded-circle" alt="<?= $post['username'] ?>" style="max-width:100px">
+                        </div>
+                        <div class="col-lg-10">
+                           <p class="lead p-2 text-body-secondary"><i><?= $post['bio'] ?></i></p>
+                        </div>
+                     </div>
+                     <div class="divider"></div>
+                     <div class="row py-2"> <!-- Row Start -->
+                        <div class="h4">RECOMMENDED FOR YOU</div>
+                        <div class="col-md"> <!-- Col Start --> 
                            <?php if($prevPost): ?>
-                           <div class="card mb-3" style="max-width: 540px;">
-                              <div class="row g-0">
-                                 <div class="col-md-4">
-                                    <img src="<?= BASE_URL ?>/<?= $prevPost['feature_image'] ?>" class="img-fluid rounded-start" style="object-fit: cover;" alt="<?= $prevPost['title'] ?>">
-                                 </div>
-                                 <div class="col-md-8">
-                                    <div class="card-body">
-                                    <h5 class="card-title"><?= $prevPost['title'] ?></h5>
-                                    <p class="card-text"><?= $prevPost['excerpt'] ?></p>
-                                    <p class="card-text"><small class="text-body-secondary"><?= date('d M Y', strtotime($prevPost['created_at'])) ?></small></p>
-                                    <a href="<?= BASE_URL ?>/<?= $prevPost['slug'] ?>" class="btn btn-dark">Read More</a>
-                                    </div>
-                                 </div>
+                           <div class="card text-white my-2">
+                              <img src="<?= BASE_URL ?>/<?= $prevPost['feature_image'] ?>" class="card-img" style="object-fit: cover;" alt="<?= $prevPost['title'] ?>">
+                              <div class="card-img-overlay">
+                                 <h5 class="card-title"><a href="<?= BASE_URL ?>/<?= $prevPost['slug'] ?>" class="btn btn-primary text-white"><?= $prevPost['title'] ?></a></h5>
                               </div>
                            </div>
                            <?php endif; ?>
-                        </div> <!-- Col Ends -->
-                        <div class="col"> <!-- Col Start -->
-                           <?php if($nextPost): ?>
-                           <div class="card mb-3" style="max-width: 540px;">
-                              <div class="row g-0">
-                                 <div class="col-md-4">
-                                    <img src="<?= BASE_URL ?>/<?= $nextPost['feature_image'] ?>" class="img-fluid rounded-start" style="object-fit: cover;" alt="<?= $nextPost['title'] ?>">
-                                 </div>
-                                 <div class="col-md-8">
-                                    <div class="card-body">
-                                    <h5 class="card-title"><?= $nextPost['title'] ?></h5>
-                                    <p class="card-text"><?= $nextPost['excerpt'] ?></p>
-                                    <p class="card-text"><small class="text-body-secondary"><?= date('d M Y', strtotime($nextPost['created_at'])) ?></small></p>
-                                    <a href="<?= BASE_URL ?>/<?= $nextPost['slug'] ?>" class="btn btn-dark">Read More</a>
-                                    </div>
-                                 </div>
-                              </div>
-                           </div>
-                           <?php endif; ?>
-                        </div> <!-- Col Ends -->
+                        </div><!-- Col Ends -->
 
-                     </div> <!-- Row Start -->
+                        <div class="col-md"> <!-- Col Start --> 
+                           <?php if($nextPost): ?>
+                           <div class="card text-white my-2">
+                              <img src="<?= BASE_URL ?>/<?= $nextPost['feature_image'] ?>" class="card-img" style="object-fit: cover;" alt="<?= $nextPost['title'] ?>">
+                              <div class="card-img-overlay">
+                                 <h5 class="card-title"><a href="<?= BASE_URL ?>/<?= $nextPost['slug'] ?>" class="btn btn-primary text-white"><?= $nextPost['title'] ?></a></h5>
+                              </div>
+                           </div>
+                           <?php endif; ?>
+                        </div><!-- Col Ends -->
+
+                     </div> <!-- Row Ends -->
                   </div>
                   <!-- Radom Blog End -->
 <!-- Comment Sections Here --> 
  <div class="p-3">
    <!-- Display Approved Comments -->
 <div class="mb-5">
-  <h3>Comments</h3>
+  <h3><i class="bi bi-chat-fill"></i> Comments</h3>
   <?php if (!empty($comments)): ?>
 
     <ul class="list-group">

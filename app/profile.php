@@ -45,7 +45,7 @@ include APP_DIR . '/include/header.php';
 </div>
 <hr>
 <main>
-    <div class="row">
+    <div class="row m-0">
         <div class="col-md-8">
             <div class="container">
                 <h2>Posts by <?= htmlspecialchars($profile['first_name'] . ' ' . $profile['last_name']); ?></h2>

@@ -39,7 +39,7 @@ include APP_DIR . '/include/header.php';
 
 ?>
 <main>
-            <div class="row">
+            <div class="row m-0">
                <div class="col-md-8">
                   <!-- Category List Start -->
                   <article class="p-3">
