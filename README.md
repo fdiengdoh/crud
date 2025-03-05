@@ -1,50 +1,67 @@
 # Blog App
-This is a PHP-based Blog App that uses PSR-4 autoloading, delight-im/auth for authentication, and a custom architecture to manage posts, categories, profiles, comments, and more.
+This is a PHP-based Blog App that uses PSR-4 autoloading, [delight-im/auth](https://github.com/delight-im/PHP-Auth) for authentication, [PHP Mailer](https://github.com/PHPMailer/PHPMailer) for sending email, and a custom architecture to manage posts, categories, profiles, comments, and more.
 
 # Theme
-This app is styled using [Bootstrap 5.3](https://getbootstrap.com) and modified some colour scheme, some theme files are kept in [public_html](public_html) directory. 
+This app is styled using [Bootstrap 5.3](https://getbootstrap.com) and modified some colour scheme where theme files are kept in [public_html](public_html) directory. 
 
 ## File Structure
 
 ```
 project-root/
-├── .env                         # Environment configuration file
-├── composer.json                # Composer configuration file
+├── .env                             # Environment configuration file
+├── composer.json                    # Composer configuration file
 ├── composer.lock
-├── init.php                     # Global initialization (error reporting, autoload, DB, Auth, etc.)
-├── vendor/                      # Composer packages
-├── src/                         # Core application code
-│   ├── AuthConstants.php        # Role constants (e.g., ROLE_ADMIN, ROLE_AUTHOR, ROLE_SUBSCRIBER)
-│   ├── Database.php             # Database connection handler
-│   ├── Mailer.php               # Email-sending class using PHPMailer
-│   ├── Controllers/             # Application controllers (Auth, Post, Category, etc.)
-│   └── Helpers/                 # Helper functions (e.g., AuthHelper)
-├── app/                         # Page files (views/templates)
-│   ├── home.php                 # Homepage
-│   ├── login.php                # Login page
-│   ├── register.php             # Registration page
-│   ├── verify.php               # Email verification page
-│   ├── forgot-password.php      # Forgot password page
-│   ├── reset-password.php       # Password reset page
-│   ├── logout.php               # Logout page
-│   ├── my-posts.php             # User posts management page
-│   ├── post-create.php          # Post creation page
-│   ├── post-edit.php            # Post editing page
-│   ├── post-delete.php          # Post deletion page (marks as draft)
-│   ├── posts.php                # Additional posts listing page (optional)
-│   ├── admin-panel.php          # Admin panel (manages posts, users, etc.)
-│   ├── admin-categories.php     # Admin category management page
-│   ├── category.php             # Public category page
-│   ├── single-post.php          # Public single post page
-│   ├── profile.php              # Public user profile page
-│   └── 404.php                  # Custom 404 error page
-└── public_html/                      # Public directory (document root)
-    ├── .htaccess               # URL rewriting rules
-    ├── index.php               # Front controller / central router
-    ├── image/                  # Folder for uploaded images
-    └── js/
-         └── vendor/
-              └── tinymce/      # Self-hosted TinyMCE files
+├── init.php                         # Global initialization (error reporting, autoload, DB, Auth, etc.)
+├── vendor/                          # Composer packages
+├── src/                             # Core application code
+│   ├── AuthConstants.php            # Role constants (e.g., ROLE_ADMIN, ROLE_AUTHOR, ROLE_SUBSCRIBER)
+│   ├── Database.php                 # Database connection handler
+│   ├── Mailer.php                   # Email-sending class using PHPMailer
+│   ├── ProfileManager.php           # Manage Profile of a user
+│   ├── Controllers/                 # Application controllers (Auth, Post, Category, etc.)
+│   └── Helpers/                     # Helper functions (e.g., AuthHelper)
+├── app/                             # Page files (views/templates)
+│   ├── admin/                       # Authenticated users and admin access only
+│   │   ├── admin-categores.php      # Admin Manage categories
+│   │   ├── admin-flag-comment.php   # Admin to flag remove/approve comments
+│   │   ├── admin-panel.php          # Admin Manage users etc
+│   │   ├── edit-profile.php         # Users profile edit
+│   │   ├── footer-auth.php          # Common footer for authenticated pages
+│   │   ├── header-auth.php          # Common header for authenticated pages
+│   │   ├── login.php                # Users Login page
+│   │   ├── my-posts.php             # Authors list of post for edit/draft
+│   │   ├── post-create.php          # Authors create new post
+│   │   ├── post-delete.php          # Authors delete posts
+│   │   ├── post-edit.php            # Authors edit poists
+│   │   └── upload-image.php         # Image upload handler 
+│   ├── include/
+│   │   ├── footer.php               # public page common footer
+│   │   ├── header.php               # public page common header
+│   │   ├── nav.php                  # public page common navigation
+│   │   └── sidebar.php              # public page common sidebar
+│   ├── 404.php                      # 404 Error Page
+│   ├── category.php                 # Public category page
+│   ├── forgot-password.php          # Forgot password page
+│   ├── home.php                     # Homepage
+│   ├── profile.php                  # Public user profile page
+│   ├── register.php                 # Registration page
+│   ├── report-comment.php           # Public report comment handler
+│   ├── reset-password.php           # Password reset page
+│   ├── single-post.php              # Single post view
+│   └── verify.php                   # Email verification page
+└── public_html/                     # Public directory (document root)
+    ├── assets/                      # All assets
+    ├── CSS/                         # Custom CSS
+    ├── image/                       # Folder for uploaded images
+    ├── js/
+    │    └── vendor/
+    │         └── tinymce/          # Self-hosted TinyMCE files
+    ├── .htaccess                   # URL rewriting rules
+    ├── index.php                   # Front controller / central router
+    ├── install.php                 # Install file to install DB config
+    ├── theme.html                  # sample theme file
+    ├── blog-theme.html             # sample theme file
+    ├── category-theme.html         # sample theme file
 ```
 ## Getting Started
 
@@ -94,7 +111,7 @@ HOME_POST=blog,technology,web-design
 ENVIRONMENT=development
 ```
 #### 4. Create a Database
-This app uses a modified [MySQL.sql](MySQL.sql) file that add `posts`, `user_profile`, `categories` etc to use for the `CRUD` application so you'll need to create a *database* for this app (eg. crud_fdh) and the MySQL file will be installed automatically as described below.
+This app uses an extended database of `delight-im/auth` and was included as [MySQL.sql](MySQL.sql) file that add `posts`, `user_profile`, `categories` etc to use for the `CRUD` application so you'll need to create a *database* for this app (eg. crud_fdh) and the MySQL file will be installed automatically as described below.
 
 #### 5. Install the Database and Default Admin User
 Assumming your webserver is at `http://localhost` then open your browser and navigate to:
@@ -107,7 +124,8 @@ http://localhost/install.php
 
   -  Create necessary database tables.
   -  Create a default admin user.
-  -  Display a verification link if email confirmation is required.
+  -  Display a verification link to confirm email.
+
 > [!CAUTION]
 > Important: For security, remove or secure the install.php script after installation.
 
@@ -119,12 +137,12 @@ Ensure your document root is set to the `public_html/` directory, then visit [ht
   All environment variables from `.env` are auto-loaded in `init.php` and defined as constants, making them available throughout your application.
 
 #### - Admin & Auth:
-  The app uses `delight-im/auth` for user authentication and role management. Adjust settings as needed. You can access admin area by visiting `http:localhost/admin` in your browser. A non admin user can login to the app by visitin `http://localhost/login`
+  The app uses `delight-im/auth` for user authentication and role management. Here I've used only three roles (Admin, Author and Subscriber). Adjust settings as needed. You can access admin area by visiting `http:localhost/admin` in your browser. A non admin user can login to the app by visitin `http://localhost/login`
 
 #### - Routing:
   Using `.htaccess` file to write pretty  url and the `public_html/index.php` acts as a central router to dispatch requests to the appropriate pages in the `app/` directory.
 #### - Assets:
-  Ensure the `public_html/image/` and `public_html/js/vendor/tinymce/` directories exist and have the correct permissions.
+  Ensure the `public_html/image/` `public_html/assets` and `public_html/js/vendor/tinymce/` directories exist and have the correct permissions.
 
 ### Next Steps
 Once the installation and initial setup are complete, you can further customize the application or review security and performance enhancements before moving to production.
