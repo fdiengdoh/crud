@@ -49,8 +49,6 @@ if (ENVIRONMENT === 'development') {
 if (!defined('BASE_URL')) {
     define('BASE_URL', $_ENV['BASE_URL'] ?? 'http://localhost');
 }
-
-// defining what categories to show in home page
 define('HOME_CATEGORIES', explode(",", HOME_POST));
 
 // Set the default timezone (adjust as needed)
