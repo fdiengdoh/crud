@@ -8,8 +8,8 @@ This app is styled using [Bootstrap 5.3](https://getbootstrap.com) and modified 
 
 ```
 project-root/
-├── app
-│   ├── admin
+├── app/                              # App Directory
+│   ├── admin/                        # Admin files Directory
 │   │   ├── admin-categories.php
 │   │   ├── admin-flag-comment.php
 │   │   ├── admin-panel.php
@@ -17,12 +17,12 @@ project-root/
 │   │   ├── header-auth.php
 │   │   ├── upload-image.php
 │   │   └── view-logs.php
-│   ├── include
+│   ├── include/                     # Common files for public pages
 │   │   ├── footer.php
 │   │   ├── header.php
 │   │   ├── nav.php
 │   │   └── sidebar.php
-│   ├── users
+│   ├── users/                       # Authenticated users files
 │   │   ├── edit-profile.php
 │   │   ├── forgot-password.php
 │   │   ├── login.php
@@ -39,49 +39,49 @@ project-root/
 │   ├── home.php
 │   ├── report-comment.php
 │   └── single-post.php
-├── logs
-├── public_html
-│   ├── assets
-│   │   ├── image
+├── logs/                           # logging errors
+├── public_html/                    # public files for public html
+│   ├── assets/                     # assets directory
+│   │   ├── image/
 │   │   │   └── default-feature.jpg
-│   │   └── profile
+│   │   └── profile/
 │   │       └── profile.png
-│   ├── css
+│   ├── css/                        # CSS directory
 │   │   ├── carousel.css
 │   │   ├── carousel.min.css
 │   │   ├── style.css
 │   │   └── style.min.css
-│   ├── image
-│   ├── js
-│   ├── uploads
-│   ├── blog-theme.html
-│   ├── category-theme.html
+│   ├── image/                     # image directory
+│   ├── js/
+│   ├── uploads/                   # All uploaded image files goes here
+│   ├── blog-theme.html            # Sample blog theme
+│   ├── category-theme.html        # Sample category theme
 │   ├── favicon.ico
 │   ├── .htaccess
-│   ├── index.php
-│   ├── install.php
-│   ├── link.php
-│   └── theme.html
-├── src
-│   ├── Controllers
+│   ├── index.php                  # index.php file as a central route
+│   ├── install.php                # will install db etc. need to remove this file after install
+│   └── theme.html                 # public html theme
+├── src/                           # Controller Classes directory
+│   ├── Controllers/
 │   │   ├── AuthController.php
 │   │   ├── CategoryController.php
 │   │   ├── CommentController.php
 │   │   ├── MediaController.php
 │   │   ├── PostController.php
 │   │   └── ProfileController.php
-│   ├── Helpers
+│   ├── Helpers/
 │   │   ├── AuthHelper.php
 │   │   └── Link.php
 │   ├── AuthConstants.php
 │   ├── Database.php
 │   ├── Mailer.php
 │   └── ProfileManager.php
+├── vendor/                           # Vendor Files
 ├── composer.json
 ├── composer.lock
-├── .env
-├── init.php
-└── MySQL.sql
+├── .env                              # .env files for defining variables
+├── init.php                          # init file to initialise 
+└── MySQL.sql                         # modifed MySQL file to extend our CRUD app
 ```
 ## Getting Started
 
@@ -166,6 +166,3 @@ Ensure your document root is set to the `public_html/` directory, then visit [ht
 
 ### Next Steps
 Once the installation and initial setup are complete, you can further customize the application or review security and performance enhancements before moving to production.
-
-### Future Enhancement
-Separate admin and other users file. As of now this app still mixed both even though access rights is set via `Roles`
