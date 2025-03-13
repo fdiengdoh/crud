@@ -8,60 +8,80 @@ This app is styled using [Bootstrap 5.3](https://getbootstrap.com) and modified 
 
 ```
 project-root/
-├── .env                             # Environment configuration file
-├── composer.json                    # Composer configuration file
+├── app
+│   ├── admin
+│   │   ├── admin-categories.php
+│   │   ├── admin-flag-comment.php
+│   │   ├── admin-panel.php
+│   │   ├── footer-auth.php
+│   │   ├── header-auth.php
+│   │   ├── upload-image.php
+│   │   └── view-logs.php
+│   ├── include
+│   │   ├── footer.php
+│   │   ├── header.php
+│   │   ├── nav.php
+│   │   └── sidebar.php
+│   ├── users
+│   │   ├── edit-profile.php
+│   │   ├── forgot-password.php
+│   │   ├── login.php
+│   │   ├── my-posts.php
+│   │   ├── post-create.php
+│   │   ├── post-delete.php
+│   │   ├── post-edit.php
+│   │   ├── profile.php
+│   │   ├── register.php
+│   │   ├── reset-password.php
+│   │   └── verify.php
+│   ├── 404.php
+│   ├── category.php
+│   ├── home.php
+│   ├── report-comment.php
+│   └── single-post.php
+├── logs
+├── public_html
+│   ├── assets
+│   │   ├── image
+│   │   │   └── default-feature.jpg
+│   │   └── profile
+│   │       └── profile.png
+│   ├── css
+│   │   ├── carousel.css
+│   │   ├── carousel.min.css
+│   │   ├── style.css
+│   │   └── style.min.css
+│   ├── image
+│   ├── js
+│   ├── uploads
+│   ├── blog-theme.html
+│   ├── category-theme.html
+│   ├── favicon.ico
+│   ├── .htaccess
+│   ├── index.php
+│   ├── install.php
+│   ├── link.php
+│   └── theme.html
+├── src
+│   ├── Controllers
+│   │   ├── AuthController.php
+│   │   ├── CategoryController.php
+│   │   ├── CommentController.php
+│   │   ├── MediaController.php
+│   │   ├── PostController.php
+│   │   └── ProfileController.php
+│   ├── Helpers
+│   │   ├── AuthHelper.php
+│   │   └── Link.php
+│   ├── AuthConstants.php
+│   ├── Database.php
+│   ├── Mailer.php
+│   └── ProfileManager.php
+├── composer.json
 ├── composer.lock
-├── init.php                         # Global initialization (error reporting, autoload, DB, Auth, etc.)
-├── vendor/                          # Composer packages
-├── src/                             # Core application code
-│   ├── AuthConstants.php            # Role constants (e.g., ROLE_ADMIN, ROLE_AUTHOR, ROLE_SUBSCRIBER)
-│   ├── Database.php                 # Database connection handler
-│   ├── Mailer.php                   # Email-sending class using PHPMailer
-│   ├── ProfileManager.php           # Manage Profile of a user
-│   ├── Controllers/                 # Application controllers (Auth, Post, Category, etc.)
-│   └── Helpers/                     # Helper functions (e.g., AuthHelper)
-├── app/                             # Page files (views/templates)
-│   ├── admin/                       # Authenticated users and admin access only
-│   │   ├── admin-categores.php      # Admin Manage categories
-│   │   ├── admin-flag-comment.php   # Admin to flag remove/approve comments
-│   │   ├── admin-panel.php          # Admin Manage users etc
-│   │   ├── edit-profile.php         # Users profile edit
-│   │   ├── footer-auth.php          # Common footer for authenticated pages
-│   │   ├── header-auth.php          # Common header for authenticated pages
-│   │   ├── login.php                # Users Login page
-│   │   ├── my-posts.php             # Authors list of post for edit/draft
-│   │   ├── post-create.php          # Authors create new post
-│   │   ├── post-delete.php          # Authors delete posts
-│   │   ├── post-edit.php            # Authors edit poists
-│   │   └── upload-image.php         # Image upload handler 
-│   ├── include/
-│   │   ├── footer.php               # public page common footer
-│   │   ├── header.php               # public page common header
-│   │   ├── nav.php                  # public page common navigation
-│   │   └── sidebar.php              # public page common sidebar
-│   ├── 404.php                      # 404 Error Page
-│   ├── category.php                 # Public category page
-│   ├── forgot-password.php          # Forgot password page
-│   ├── home.php                     # Homepage
-│   ├── profile.php                  # Public user profile page
-│   ├── register.php                 # Registration page
-│   ├── report-comment.php           # Public report comment handler
-│   ├── reset-password.php           # Password reset page
-│   ├── single-post.php              # Single post view
-│   └── verify.php                   # Email verification page
-└── public_html/                     # Public directory (document root)
-    ├── assets/                      # All assets
-    ├── CSS/                         # Custom CSS
-    ├── image/                       # Folder for uploaded images
-    ├── js/
-    │    └── vendor/
-    │         └── tinymce/          # Self-hosted TinyMCE files
-    ├── .htaccess                   # URL rewriting rules
-    ├── index.php                   # Front controller / central router
-    ├── install.php                 # Install file to install DB config
-    ├── theme.html                  # sample theme file
-    ├── blog-theme.html             # sample theme file
-    ├── category-theme.html         # sample theme file
+├── .env
+├── init.php
+└── MySQL.sql
 ```
 ## Getting Started
 
