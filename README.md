@@ -8,8 +8,8 @@ This app is styled using [Bootstrap 5.3](https://getbootstrap.com) and modified 
 
 ```
 project-root/
-├── app/                              # App Directory
-│   ├── admin/                        # Admin files Directory
+├── app/
+│   ├── admin/
 │   │   ├── admin-categories.php
 │   │   ├── admin-flag-comment.php
 │   │   ├── admin-panel.php
@@ -17,14 +17,16 @@ project-root/
 │   │   ├── header-auth.php
 │   │   ├── upload-image.php
 │   │   └── view-logs.php
-│   ├── include/                     # Common files for public pages
+│   ├── include/
 │   │   ├── footer.php
 │   │   ├── header.php
 │   │   ├── nav.php
 │   │   └── sidebar.php
-│   ├── users/                       # Authenticated users files
+│   ├── users/
+│   │   ├── ajax_handler.php
 │   │   ├── edit-profile.php
 │   │   ├── forgot-password.php
+│   │   ├── increment-view.php
 │   │   ├── login.php
 │   │   ├── my-posts.php
 │   │   ├── post-create.php
@@ -39,29 +41,31 @@ project-root/
 │   ├── home.php
 │   ├── report-comment.php
 │   └── single-post.php
-├── logs/                           # logging errors
-├── public_html/                    # public files for public html
-│   ├── assets/                     # assets directory
+├── cache_config/
+│   └── config.php
+├── logs/
+│   └── error.log
+├── public_html/
+│   ├── assets/
 │   │   ├── image/
-│   │   │   └── default-feature.jpg
+│   │   │   ├── default-feature.jpg
+│   │   │   └── default-feature.webp
 │   │   └── profile/
 │   │       └── profile.png
-│   ├── css/                        # CSS directory
+│   ├── css/
 │   │   ├── carousel.css
 │   │   ├── carousel.min.css
 │   │   ├── style.css
 │   │   └── style.min.css
-│   ├── image/                     # image directory
+│   ├── image/
 │   ├── js/
-│   ├── uploads/                   # All uploaded image files goes here
-│   ├── blog-theme.html            # Sample blog theme
-│   ├── category-theme.html        # Sample category theme
+│   ├── blog-theme.html
+│   ├── category-theme.html
 │   ├── favicon.ico
-│   ├── .htaccess
-│   ├── index.php                  # index.php file as a central route
-│   ├── install.php                # will install db etc. need to remove this file after install
-│   └── theme.html                 # public html theme
-├── src/                           # Controller Classes directory
+│   ├── index.php
+│   ├── install.php
+│   └── theme.html
+├── src/
 │   ├── Controllers/
 │   │   ├── AuthController.php
 │   │   ├── CategoryController.php
@@ -72,16 +76,16 @@ project-root/
 │   ├── Helpers/
 │   │   ├── AuthHelper.php
 │   │   └── Link.php
+│   ├── Utils/
+│   │   └── Cache.php
 │   ├── AuthConstants.php
 │   ├── Database.php
 │   ├── Mailer.php
 │   └── ProfileManager.php
-├── vendor/                           # Vendor Files
 ├── composer.json
 ├── composer.lock
-├── .env                              # .env files for defining variables
-├── init.php                          # init file to initialise 
-└── MySQL.sql                         # modifed MySQL file to extend our CRUD app
+├── init.php
+└── MySQL.sql
 ```
 ## Getting Started
 
