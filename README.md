@@ -125,11 +125,12 @@ MAIL_FROM_NAME="App Name"
 
 # Website specific settings that you can change
 BASE_URL=your-domain.com
+LOGIN_URL=your-domain.com
 FEATURED_POST=featured-post
 POSTS_PER_PAGE=5
 POPULAR_POST=3
 RECENT_POST=5
-HOME_POST=blog,technology,web-design
+HOME_POST=list,of,categories
 
 # Define Environment either development or live
 ENVIRONMENT=development
@@ -167,6 +168,9 @@ Ensure your document root is set to the `public_html/` directory, then visit [ht
   Using `.htaccess` file to write pretty  url and the `public_html/index.php` acts as a central router to dispatch requests to the appropriate pages in the `app/` directory.
 #### - Assets:
   Ensure the `public_html/image/` `public_html/assets` and `public_html/js/vendor/tinymce/` directories exist and have the correct permissions.
+
+### - Cache
+This app has a functionality to cache pages to increase performance. cache is updated when a user create a new post, or someone comment on the blog.
 
 ### Next Steps
 Once the installation and initial setup are complete, you can further customize the application or review security and performance enhancements before moving to production.
