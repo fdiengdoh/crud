@@ -2,6 +2,7 @@
     "type": "library",
     "keywords": [ "blog", "crud", "php", "bootstrap" ],
     "homepage": "https://github.com/fdiengdoh/crud",
+    "name": "fdiengdoh/blog-app",
     "author": "Farlando Diengdoh",
     "license": "MIT",  
     "autoload": {
