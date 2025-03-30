@@ -1,5 +1,5 @@
 <?php
-// public/upload-image.php
+// app/admin/upload-image.php
 
 require_once __DIR__ . '/../../init.php';
 
