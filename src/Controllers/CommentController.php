@@ -1,4 +1,5 @@
 <?php
+// src/Controllers/CommentController
 namespace App\Controllers;
 
 use App\Database;
