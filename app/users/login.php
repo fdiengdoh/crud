@@ -1,5 +1,5 @@
 <?php
-// public/login.php
+// app/users/login.php
 require_once __DIR__ . '/../../init.php';
 use App\Controllers\AuthController;
 
