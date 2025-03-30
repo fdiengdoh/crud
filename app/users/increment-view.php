@@ -1,5 +1,5 @@
 <?php
-// public/ajax/increment-view.php
+// app/users/increment-view.php
 header('Content-Type: application/json');
 
 use App\Controllers\PostController;
