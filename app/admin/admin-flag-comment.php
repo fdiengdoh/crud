@@ -1,5 +1,5 @@
 <?php
-// app/flag-comment.php
+// app/admin/admin-flag-comment.php
 require_once __DIR__ . '/../../init.php';
 
 use App\Controllers\CommentController;
