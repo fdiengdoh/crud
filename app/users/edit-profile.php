@@ -1,5 +1,5 @@
 <?php
-// app/admin/profile.php
+// app/users/edit-profile.php
 require_once __DIR__ . '/../../init.php';
 
 use App\Controllers\ProfileController;
