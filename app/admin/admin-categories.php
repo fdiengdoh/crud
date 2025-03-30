@@ -1,5 +1,5 @@
 <?php
-// app/admin-categories.php
+// app/admin/admin-categories.php
 require_once __DIR__ . '/../../init.php';
 // (Additional authentication checks can be done in init.php)
 // Set a page title for the header if desired
