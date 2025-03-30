@@ -75,8 +75,8 @@ POPULAR_POST=3
 RECENT_POST=5
 HOME_POST=list,of,blog,for,home,page
 
-    # Define Environment ad development or live
-    ENVIRONMENT=development
+# Define Environment ad development or live
+ENVIRONMENT=development
 ```
 
 4. **Run the Installation Script**
