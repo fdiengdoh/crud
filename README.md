@@ -1,176 +1,233 @@
-# Blog App
-This is a PHP-based Blog App that uses PSR-4 autoloading, [delight-im/auth](https://github.com/delight-im/PHP-Auth) for authentication, [PHP Mailer](https://github.com/PHPMailer/PHPMailer) for sending email, and a custom architecture to manage posts, categories, profiles, comments, and more.
+
+# CRUD Blog App
+
+This is a PHP-based CRUD Blog App that uses PSR-4 autoloading, [PHP Mailer](https://github.com/PHPMailer/PHPMailer) for sending email that features pretty URLs, a custom caching system, authentication via [delight-im/auth](https://github.com/delight-im/PHP-Auth) and flexible routing. It also includes support for user posts, categories, comments etc.
 
 # Theme
+
 This app is styled using [Bootstrap 5.3](https://getbootstrap.com) and modified some colour scheme where theme files are kept in [public_html](public_html) directory. 
 
-## File Structure
+## Table of Contents
 
+- [Features](#features)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [File Structure](#file-structure)
+- [Usage](#usage)
+- [Routing](#routing)
+- [Caching](#caching)
+- [Security](#security)
+- [Additional Notes](#additional-notes)
+
+## Features
+
+- **User Authentication:** Registration, login, password reset, and email verification using delight‑im/auth.
+- **Post Management:** Create, read, update, and delete posts with support for pretty URLs.
+- **Category Filtering:** Browse posts by category.
+- **Dynamic Routing:** Only allow valid post and category slugs.
+- **Caching System:** File‑based caching that serves static pages for guest visitors and bypasses cache for dynamic content.
+- **Social Previews:** Support for Open Graph and Twitter Cards (configurable in header files).
+- **Commenting:** Comment system that has moderation/flag system 
+
+## Installation
+
+1. **Clone the Repository**
+
+   ```bash
+   git clone https://github.com/fdiengdoh/crud.git
+   cd crud
+   ```
+
+2. **Install Composer Dependencies**
+
+   Make sure you have [Composer](https://getcomposer.org/) installed, then run:
+
+   ```bash
+   composer install
+   ```
+
+3. **Set Up the Environment**
+
+   - Create a copy of the `.env.example` file (if provided) as `.env` in the project root.
+   - Edit the `.env` file to include your database credentials, email settings, and any other configuration:
+     
+```dotenv
+# Database Settings
+DB_HOST=localhost
+DB_NAME=db_name
+DB_USER=db_user
+DB_PASS=password
+
+#Email Settings
+SMTP_HOST=smtp.email
+SMTP_USER=smtp.user
+SMTP_PASS=smtp.password
+SMTP_PORT=465
+MAIL_FROM=email@address
+MAIL_FROM_NAME="CRUD Blog App"
+
+# Website specific settings
+BASE_URL=https://yourdomain.com
+LOGIN_URL=https://your-domain.com
+FEATURED_POST=featured-post
+POSTS_PER_PAGE=5
+POPULAR_POST=3
+RECENT_POST=5
+HOME_POST=list,of,blog,for,home,page
+
+    # Define Environment ad development or live
+    ENVIRONMENT=development
+```
+
+4. **Run the Installation Script**
+
+   - Navigate to your site in a browser (e.g., `https://yourdomain.com/install.php`).
+   - Fill in the required fields (default admin email, username, password).
+   - The installer will create the necessary database tables and a default admin user.
+   - **Important:** Once installation is complete, remove or secure the `install.php` file.
+
+## Configuration
+
+- **init.php**  
+  Loads environment variables, starts sessions, initializes the database and authentication systems.
+
+- **Cache Configuration**  
+  Cache settings are stored in a configuration file (e.g., `cache_config/config.php`). Adjust the TTL (time-to-live) as needed.
+
+## File Structure
 ```
 project-root/
 ├── app/
 │   ├── admin/
-│   │   ├── admin-categories.php
-│   │   ├── admin-flag-comment.php
-│   │   ├── admin-panel.php
-│   │   ├── footer-auth.php
-│   │   ├── header-auth.php
-│   │   ├── upload-image.php
-│   │   └── view-logs.php
+│   │   ├── admin-categories.php      # Admin categories management
+│   │   ├── admin-flag-comment.php    # Admin flag comments
+│   │   ├── admin-panel.php           # Admin panel for various functions
+│   │   ├── footer-auth.php           # Authenticated pages footer
+│   │   ├── header-auth.php           # Authenticated pages header
+│   │   ├── upload-image.php          # Upload images functionality
+│   │   └── view-logs.php             # Admin view error logs for live environment
 │   ├── include/
-│   │   ├── footer.php
-│   │   ├── header.php
-│   │   ├── nav.php
-│   │   └── sidebar.php
+│   │   ├── footer.php                # Common footer for public pages
+│   │   ├── header.php                # Common header for public pages
+│   │   ├── nav.php                   # Common navigation for public pages
+│   │   └── sidebar.php               # Common sidebar for public pages
 │   ├── users/
-│   │   ├── ajax_handler.php
-│   │   ├── edit-profile.php
-│   │   ├── forgot-password.php
-│   │   ├── increment-view.php
-│   │   ├── login.php
-│   │   ├── my-posts.php
-│   │   ├── post-create.php
-│   │   ├── post-delete.php
-│   │   ├── post-edit.php
-│   │   ├── profile.php
-│   │   ├── register.php
-│   │   ├── reset-password.php
-│   │   └── verify.php
-│   ├── 404.php
-│   ├── category.php
-│   ├── home.php
-│   ├── report-comment.php
-│   └── single-post.php
+│   │   ├── ajax_handler.php          # Ajax handler file
+│   │   ├── edit-profile.php          # User edit profile
+│   │   ├── forgot-password.php       # User forgot password function
+│   │   ├── increment-view.php        # Increment views of a page
+│   │   ├── login.php                 # Login function
+│   │   ├── my-posts.php              # List users post
+│   │   ├── post-create.php           # Create a new post
+│   │   ├── post-delete.php           # Delete post
+│   │   ├── post-edit.php             # Edit existing post
+│   │   ├── profile.php               # View User's Profile
+│   │   ├── register.php              # Register a new user
+│   │   ├── reset-password.php        # Reset password of an existing user
+│   │   └── verify.php                # Email based verification for new user
+│   ├── 404.php                       # Public 404 Error page
+│   ├── category.php                  # Public list of categories
+│   ├── home.php                      # Public Home page
+│   ├── report-comment.php            # Public report comments
+│   └── single-post.php               # Public show a single post
 ├── cache_config/
-│   └── config.php
+│   └── config.php                    # Cache configuration file
 ├── logs/
-│   └── error.log
-├── public_html/
+│   └── error.log                     # Error logs for live environment
+├── public_html/                      # Publicly accesible files
 │   ├── assets/
 │   │   ├── image/
-│   │   │   ├── default-feature.jpg
-│   │   │   └── default-feature.webp
+│   │   │   ├── default-feature.jpg   # Default feature image in jpg
+│   │   │   └── default-feature.webp  # Default feature image in webp
 │   │   └── profile/
-│   │       └── profile.png
+│   │       └── profile.png           # Default profile image
 │   ├── css/
-│   │   ├── carousel.css
+│   │   ├── carousel.css              # Carousel css
 │   │   ├── carousel.min.css
-│   │   ├── style.css
+│   │   ├── style.css                 # public pages style css
 │   │   └── style.min.css
 │   ├── image/
-│   ├── js/
-│   ├── blog-theme.html
-│   ├── category-theme.html
-│   ├── favicon.ico
-│   ├── index.php
-│   ├── install.php
-│   └── theme.html
+│   ├── js/                           # vendor js
+│   ├── blog-theme.html               # sample blog-theme in bootstrap 5
+│   ├── category-theme.html           # sample category theme in bootstrap 5
+│   ├── favicon.ico                   # sample favicon
+│   ├── .htaccess                     # Sample .htaccess for routing
+│   ├── index.php                     # index.ph file for routing pretty url
+│   ├── install.php                   # install file for use at the start
+│   └── theme.html                    # public home page theme
 ├── src/
-│   ├── Controllers/
+│   ├── Controllers/                  # Various controller class
 │   │   ├── AuthController.php
 │   │   ├── CategoryController.php
 │   │   ├── CommentController.php
 │   │   ├── MediaController.php
 │   │   ├── PostController.php
 │   │   └── ProfileController.php
-│   ├── Helpers/
+│   ├── Helpers/                      # Helper Class
 │   │   ├── AuthHelper.php
 │   │   └── Link.php
 │   ├── Utils/
-│   │   └── Cache.php
-│   ├── AuthConstants.php
-│   ├── Database.php
-│   ├── Mailer.php
-│   └── ProfileManager.php
-├── composer.json
+│   │   └── Cache.php                 # Cache class
+│   ├── AuthConstants.php             # Role constants (ROLE_ADMIN, ROLE_AUTHOR, ROLE_SUBSCRIBER)
+│   ├── Database.php                  # Database connection handler
+│   ├── Mailer.php                    # Email-sending class using PHPMailer
+│   └── ProfileManager.php            # Profile manager class
+├── vendor/                           # Composer packages
+├── composer.json                     # Composer dependencies configuration
 ├── composer.lock
-├── init.php
-└── MySQL.sql
+├── .env                              # Environment configuration file
+├── init.php                          # Global initialization file
+└── MySQL.sql                         # Modified MySQL file from delight-im for installation
 ```
-## Getting Started
 
-### Follow these steps to get the project up and running:
+## Usage
 
-#### 1. Clone the Repository
-   
-  ```bash
-  git clone https://github.com/fdiengdoh/crud.git
-  cd crud
-  ```
-#### 2. Install Dependencies
+- **Front-End Routing:**  
+  The front controller in `public/index.php` handles all requests. It:
+  - Checks for cached pages and serves them for GET requests (for guest users).
+  - Uses allowed post and category slugs (retrieved from the database) to determine if the URL is valid.
+  - Redirects invalid URLs to a 404 page.
+  - Normalizes category URLs to include page numbers (e.g., `/search/label/blog/1`).
 
-Make sure you have Composer installed. Then run:
+- **Admin and User Pages:**  
+  Authentication is handled by `delight‑im/auth`. Users can log in, manage posts, update profiles, etc.
 
-```bash
-composer install
-```
-#### 3. Configure Environment Variables
-  - Copy the example file that is provided or create a new .env file in the project root.
-  - Update the values in .env with your settings. Example:
+- **Caching:**  
+  Pages are cached as static HTML files based on the full request URI (e.g., `/search/label/blog/1`).  
+  Admin can clear all cache if needed, or you can just use `?refresh=1` to force a refresh if needed.
 
-```dotenv
-# Database Settings
-DB_HOST=localhost
-DB_NAME=crud_fdh
-DB_USER=db_user
-DB_PASS=password
+## Routing
 
-# Email Settings
-SMTP_HOST=your.smtp.host
-SMTP_USER=email@domain.com
-SMTP_PASS=smtp_password
-SMTP_PORT=465
-MAIL_FROM=email@domain.com
-MAIL_FROM_NAME="App Name"
+The router uses a `routeFile` variable to determine which page to include based on the URL path. For example:
 
-# Website specific settings that you can change
-BASE_URL=your-domain.com
-LOGIN_URL=your-domain.com
-FEATURED_POST=featured-post
-POSTS_PER_PAGE=5
-POPULAR_POST=3
-RECENT_POST=5
-HOME_POST=list,of,categories
+- `/` loads `home.php`
+- `/profile/username` loads `users/profile.php`
+- `/search/label/blog/1` loads `category.php` (with page number normalized)
+- Otherwise, the system assumes the URL is a post slug and loads `single-post.php`
+- Invalid URLs redirect to `/404.html`
 
-# Define Environment either development or live
-ENVIRONMENT=development
-```
-#### 4. Create a Database
-This app uses an extended database of `delight-im/auth` and was included as [MySQL.sql](MySQL.sql) file that add `posts`, `user_profile`, `categories` etc to use for the `CRUD` application so you'll need to create a *database* for this app (eg. crud_fdh) and the MySQL file will be installed automatically as described below.
+## Caching
 
-#### 5. Install the Database and Default Admin User
-Assumming your webserver is at `http://localhost` then open your browser and navigate to:
+- **Cache Key Generation:**  
+  The cache key is based on the normalized request URI. For category pages, the page number is appended (e.g., `/search/label/blog/1`).
 
-```
-http://localhost/install.php
-```
-- Fill in the default admin credentials in the form and submit.
-- This script will:
+- **Clearing Cache:**  
+  You can clear specific pages or all cache using the methods in `App\Utils\Cache`.
 
-  -  Create necessary database tables.
-  -  Create a default admin user.
-  -  Display a verification link to confirm email.
+## Security
 
-> [!CAUTION]
-> Important: For security, remove or secure the install.php script after installation.
+- **Authentication:**  
+  delight‑im/auth is used for secure login and session management.
+- **HTTPS Enforcement:**  
+  `.htaccess` that enforces HTTPS.
+- **CSP and Other Headers:**  
+  Additional security headers are set to protect against clickjacking and content sniffing pre-build in `delight-im/auth`.
+- **Cache Bypass for Authenticated Users:**  
+  Only guest visitors receive cached pages, ensuring authenticated users always see dynamic content.
 
-#### 6. Use your App
-Ensure your document root is set to the `public_html/` directory, then visit [http://localhost/](http://localhost) in your browser.
+## Additional Notes
 
-### Additional Notes
-#### - Environment Variables:
-  All environment variables from `.env` are auto-loaded in `init.php` and defined as constants, making them available throughout your application.
-
-#### - Admin & Auth:
-  The app uses `delight-im/auth` for user authentication and role management. Here I've used only three roles (Admin, Author and Subscriber). Adjust settings as needed. You can access admin area by visiting `http:localhost/admin` in your browser. A non admin user can login to the app by visiting `http://localhost/login`
-
-#### - Routing:
-  Using `.htaccess` file to write pretty  url and the `public_html/index.php` acts as a central router to dispatch requests to the appropriate pages in the `app/` directory.
-#### - Assets:
-  Ensure the `public_html/image/` `public_html/assets` and `public_html/js/vendor/tinymce/` directories exist and have the correct permissions.
-
-### - Cache
-This app has a functionality to cache pages to increase performance. cache is updated when a user create a new post, or someone comment on the blog.
-
-### Next Steps
-Once the installation and initial setup are complete, you can further customize the application or review security and performance enhancements before moving to production.
+- **Development vs. Production:**  
+  Make sure to update error reporting and caching settings in your `.env` file for production.
+- **Further Improvements:**  
+  Future improvements might include autosave, social meta tags, and more.
