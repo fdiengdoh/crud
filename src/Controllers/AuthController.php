@@ -1,4 +1,5 @@
 <?php
+// src/Controllers/AuthController.php
 namespace App\Controllers;
 
 use App\Database;
