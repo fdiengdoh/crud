@@ -1,5 +1,5 @@
 <?php
-// public/reset-password.php
+// app/users/reset-password.php
 require_once __DIR__ . '/../../init.php';
 
 use App\Controllers\AuthController;
