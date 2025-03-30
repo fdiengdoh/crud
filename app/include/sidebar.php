@@ -1,4 +1,5 @@
 <?php
+// app/include/sidebar.php common for all public pages
 $postController ? $popularPosts = $postController->getPopularPosts(POPULAR_POST): $popularPosts = (new PostController())->getPopularPosts(POPULAR_POST);
 $postController ? $recentPosts = $postController->getRecentPosts(RECENT_POST): $recentPosts = (new PostController())->getRecentPosts(RECENT_POST);
 ?>
