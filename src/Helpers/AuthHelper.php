@@ -1,4 +1,5 @@
 <?php
+// src/Helpers/AuthHelper.php
 namespace App\Helpers;
 
 use Delight\Auth\Auth;
