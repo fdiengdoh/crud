@@ -40,13 +40,29 @@ The core functionality of this app is to use as a blogging application. All the 
    use Delight\Auth\Auth;    //Authentication with delight-im/auth
    use App\Controllers\PostController;       // To perform CRUD on posts
    use App\Controllers\CategoryController;   // To Manage categories
+   use App\Controllers\CommentController;    // To Manage Coments
 
    // Instantiate classes
-   $pdo = Database::getConnection();
-   $auth = new Auth($pdo);
-   // Instantiate controllers for retrieving allowed slugs
+   $pdo = Database::getConnection();      //Connect to Database
+   $auth = new Auth($pdo);                //Instantiate Authentication
+   // Instantiate controllers for post, category, comments, etc.,
    $postController = new PostController();
    $categoryController = new CategoryController();
+   $commentController = new CommentController();
+```
+
+Then you can access the methods by simply calling the methods as follows:
+
+```php
+   $postController->create($userId,$title,$content,);    //To create a new post
+   $postController->update($userId,$title,$content,);    //To update a post
+   $postController->show($id); //To show a post by post id/slug
+
+   $categoryController->createCategory($name, $slug);   // To create a new category
+   $categoryController->updateCategory($id, $name, $slug);   // To update a category
+
+   $commentController->saveComment($postId, $author, $email, $comment);   //To save a comment
+   $commentController->getApprovedComments($postId);   //To get all approved comments
 ```
 Each class is well commented on their uses, so feel free to explore the [src](src) directory. If you want a quick set up and just start posting then you can follow the steps below: 
 
