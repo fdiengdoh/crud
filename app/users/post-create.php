@@ -1,5 +1,5 @@
 <?php
-// app/admin/post-crate.php
+// app/users/post-crate.php
 require_once __DIR__ . '/../../init.php';
 
 use App\Controllers\PostController;
