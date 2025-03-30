@@ -1,5 +1,5 @@
 <?php
-// app/admin/post-edit.php
+// app/users/post-edit.php
 require_once __DIR__ . '/../../init.php';
 
 use App\Controllers\PostController;
