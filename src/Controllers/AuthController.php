@@ -4,7 +4,7 @@ namespace App\Controllers;
 use App\Database;
 use Delight\Auth\Auth;
 use Delight\Auth\Role;
-use App\Mailer; // Use our new Mailer class
+use App\Mailer;
 
 class AuthController {
 
