@@ -1,4 +1,5 @@
 <?php
+// src/Controllers/PostController.php
 /*
  * This class will control queries related to posts, categories, users
  */
