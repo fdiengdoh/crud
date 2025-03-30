@@ -1,4 +1,5 @@
 <?php
+// app/include/header.php common for all public pages
 // To get metada for social network
 if (isset($isSinglePost) && $isSinglePost && isset($post)) {
     // For single post pages
