@@ -1,4 +1,3 @@
-
 # CRUD Blog App
 
 This is a PHP-based CRUD Blog App that uses PSR-4 autoloading, [PHP Mailer](https://github.com/PHPMailer/PHPMailer) for sending email that features pretty URLs, a custom caching system, authentication via [delight-im/auth](https://github.com/delight-im/PHP-Auth) and flexible routing. It also includes support for user posts, categories, comments etc.
