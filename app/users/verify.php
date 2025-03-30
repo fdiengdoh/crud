@@ -2,7 +2,6 @@
 // app/users/verify.php
 require_once __DIR__ . '/../../init.php';
 
-
 // Retrieve selector and token from URL query parameters
 $selector = $_GET['selector'] ?? '';
 $token    = $_GET['token'] ?? '';
