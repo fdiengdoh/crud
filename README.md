@@ -1,14 +1,15 @@
 # CRUD Blog App
 
-This is a PHP-based CRUD Blog App that uses PSR-4 autoloading, [PHP Mailer](https://github.com/PHPMailer/PHPMailer) for sending email that features pretty URLs, a custom caching system, authentication via [delight-im/auth](https://github.com/delight-im/PHP-Auth) and flexible routing. It also includes support for user posts, categories, comments etc.
+This is a PHP-based CRUD Blog App that uses PSR-4 autoloading that features pretty URLs, a custom caching system, authentication via [delight-im/auth](https://github.com/delight-im/PHP-Auth), [PHP Mailer](https://github.com/PHPMailer/PHPMailer) for sending email and flexible routing system. The CRUD system would allow admin/authors for creating posts and admins to manage categories. A public viewer can comment on a post. 
 
 # Theme
 
-This app is styled using [Bootstrap 5.3](https://getbootstrap.com) and modified some colour scheme where theme files are kept in [public_html](public_html) directory. 
+This app is styled using [Bootstrap 5.3](https://getbootstrap.com) and I've made minor changes to the colour scheme. You can take a look at the theme files that are kept in [public_html](public_html) directory. 
 
 ## Table of Contents
 
 - [Features](#features)
+- [Core Functions](#core-function)
 - [Installation](#installation)
 - [Configuration](#configuration)
 - [File Structure](#file-structure)
@@ -27,6 +28,27 @@ This app is styled using [Bootstrap 5.3](https://getbootstrap.com) and modified 
 - **Caching System:** File‑based caching that serves static pages for guest visitors and bypasses cache for dynamic content.
 - **Social Previews:** Support for Open Graph and Twitter Cards (configurable in header files).
 - **Commenting:** Comment system that has moderation/flag system 
+
+## Core Function
+
+The core functionality of this app is to use as a blogging application. All the requirements for the app to function is in the `/src` directory (The full [file structure](#file-structure) is given below). A sample `/app` dir and sample `/public_html` dir is added if you want to use this app as it is. If you want to have your own theme and system, you can use this app as follows:
+
+```php
+<?php
+   require_once __DIR__ . '../vendor/autoload.php';
+   use App\Database;         //Database connection
+   use Delight\Auth\Auth;    //Authentication with delight-im/auth
+   use App\Controllers\PostController;       // To perform CRUD on posts
+   use App\Controllers\CategoryController;   // To Manage categories
+
+   // Instantiate classes
+   $pdo = Database::getConnection();
+   $auth = new Auth($pdo);
+   // Instantiate controllers for retrieving allowed slugs
+   $postController = new PostController();
+   $categoryController = new CategoryController();
+```
+Each class is well commented on their uses, so feel free to explore the [src](src) directory. If you want a quick set up and just start posting then you can follow the steps below: 
 
 ## Installation
 
