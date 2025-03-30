@@ -51,33 +51,33 @@ This app is styled using [Bootstrap 5.3](https://getbootstrap.com) and modified 
    - Create a copy of the `.env.example` file (if provided) as `.env` in the project root.
    - Edit the `.env` file to include your database credentials, email settings, and any other configuration:
      
-```dotenv
-# Database Settings
-DB_HOST=localhost
-DB_NAME=db_name
-DB_USER=db_user
-DB_PASS=password
-
-#Email Settings
-SMTP_HOST=smtp.email
-SMTP_USER=smtp.user
-SMTP_PASS=smtp.password
-SMTP_PORT=465
-MAIL_FROM=email@address
-MAIL_FROM_NAME="CRUD Blog App"
-
-# Website specific settings
-BASE_URL=https://yourdomain.com
-LOGIN_URL=https://your-domain.com
-FEATURED_POST=featured-post
-POSTS_PER_PAGE=5
-POPULAR_POST=3
-RECENT_POST=5
-HOME_POST=list,of,blog,for,home,page
-
-# Define Environment ad development or live
-ENVIRONMENT=development
-```
+   ```dotenv
+   # Database Settings
+   DB_HOST=localhost
+   DB_NAME=db_name
+   DB_USER=db_user
+   DB_PASS=password
+   
+   #Email Settings
+   SMTP_HOST=smtp.email
+   SMTP_USER=smtp.user
+   SMTP_PASS=smtp.password
+   SMTP_PORT=465
+   MAIL_FROM=email@address
+   MAIL_FROM_NAME="CRUD Blog App"
+   
+   # Website specific settings
+   BASE_URL=https://yourdomain.com
+   LOGIN_URL=https://your-domain.com
+   FEATURED_POST=featured-post
+   POSTS_PER_PAGE=5
+   POPULAR_POST=3
+   RECENT_POST=5
+   HOME_POST=list,of,blog,for,home,page
+   
+   # Define Environment ad development or live
+   ENVIRONMENT=development
+   ```
 
 4. **Run the Installation Script**
 
