@@ -1,5 +1,5 @@
 <?php 
-// ajax_handler.php
+// app/users/ajax_handler.php
 header('Content-Type: application/json');
 
 use App\Controllers\PostController;
