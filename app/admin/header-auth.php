@@ -1,5 +1,5 @@
 <?php
-// app/header-auth.php
+// app/admin/header-auth.php
 // This header is meant for authenticated pages
 
 if (!isset($auth) || !$auth->isLoggedIn()) {
