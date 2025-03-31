@@ -183,7 +183,7 @@ project-root/
 │   │   ├── carousel.min.css
 │   │   ├── style.css                 # public pages style css
 │   │   └── style.min.css
-│   ├── image/
+│   ├── uploads/                      # Uploaded images dir
 │   ├── js/                           # vendor js
 │   ├── blog-theme.html               # sample blog-theme in bootstrap 5
 │   ├── category-theme.html           # sample category theme in bootstrap 5
