@@ -85,8 +85,7 @@ Each class is well commented on their uses, so feel free to explore the [src](sr
 
 3. **Set Up the Environment**
 
-   - Create a copy of the `.env.example` file (if provided) as `.env` in the project root.
-   - Edit the `.env` file to include your database credentials, email settings, and any other configuration:
+   - Edit/Add a `.env` file to include your database credentials, email settings, and any other configuration:
      
    ```dotenv
    # Database Settings
