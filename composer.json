@@ -2,7 +2,6 @@
     "type": "library",
     "keywords": [ "blog", "crud", "php", "bootstrap" ],
     "homepage": "https://github.com/fdiengdoh/crud",
-    "name": "fdiengdoh/blog-app",
     "author": "Farlando Diengdoh",
     "license": "MIT",  
     "autoload": {
@@ -11,10 +10,11 @@
       }
     },
     "require": {
-        "delight-im/auth": "^8.3",
+        "delight-im/auth": "^9.0",
         "vlucas/phpdotenv": "^5.6",
-        "phpmailer/phpmailer": "^6.9",
-        "tinymce/tinymce": "^7.7"
+        "phpmailer/phpmailer": "^6.10",
+        "tinymce/tinymce": "^7.7",
+        "league/oauth2-client": "^2.8",
+        "league/oauth2-google": "^4.0"
     }
 }
-
