@@ -1,5 +1,4 @@
 <?php
-// src/Helpers/Link
 namespace App\Helpers;
 
 class Link {

@@ -4,11 +4,13 @@ namespace App;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception as MailException;
 use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\OAuth; // Import the PHPMailer OAuth class
+use League\OAuth2\Client\Provider\Google as GoogleProvider; // Use League's Google Provider
 
 class Mailer {
 
     /**
-     * Send an email using PHPMailer.
+     * Send an email using PHPMailer with Google OAuth 2.0.
      *
      * @param string $to Recipient email address.
      * @param string $toName Recipient name.
@@ -18,20 +20,60 @@ class Mailer {
      * @return bool|string Returns true on success or error message on failure.
      */
     public static function sendEmail($to, $toName, $subject, $body, $altBody) {
-        $mail = new PHPMailer(true);
+        $mail = new PHPMailer(true); // Passing `true` enables exceptions
+
         try {
-            // Server settings
-            $mail->isSMTP();
-            $mail->Host       = $_ENV['SMTP_HOST'] ?? 'smtp.example.com';
-            $mail->SMTPAuth   = true;
-            $mail->Username   = $_ENV['SMTP_USER'] ?? 'user@example.com';
-            $mail->Password   = $_ENV['SMTP_PASS'] ?? 'secret';
-            // Use SMTPS encryption (typically on port 465)
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-            $mail->Port       = $_ENV['SMTP_PORT'] ?? 465;
-            
+            // Server settings for Google SMTP with OAuth
+            $mail->SMTPDebug = SMTP::DEBUG_OFF; // Set to SMTP::DEBUG_SERVER for debugging, DEBUG_OFF for production
+            $mail->isSMTP();                     // Send using SMTP
+            $mail->Host       = 'smtp.gmail.com';  // Google's SMTP server
+            $mail->SMTPAuth   = true;              // Enable SMTP authentication
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS; // Enable implicit TLS encryption
+            $mail->Port       = 465;               // Standard port for SMTPS
+
+            // OAuth 2.0 settings for Google
+            $mail->AuthType = 'XOAUTH2';
+
+            // --- Retrieve Google OAuth 2.0 credentials from environment variables ---
+            // Ensure these environment variables are set in your application's .env file or server configuration
+            $clientId     = $_ENV['GOOGLE_CLIENT_ID'];
+            $clientSecret = $_ENV['GOOGLE_CLIENT_SECRET'];
+            $refreshToken = $_ENV['GOOGLE_REFRESH_TOKEN'];
+            $fromEmail    = $_ENV['MAIL_FROM']; // The Google account email that you authorized
+
+
+            // Validate that required OAuth credentials are set
+            if (empty($clientId) || empty($clientSecret) || empty($refreshToken) || empty($fromEmail)) {
+                throw new MailException("Google OAuth credentials (CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, MAIL_FROM) must be set in environment variables.");
+            }
+
+            // Instantiate League's Google Provider directly
+            // Note: The redirectUri is primarily for the *initial* authorization flow,
+            // not typically required for refreshing tokens in a background process.
+            // However, the constructor for GoogleProvider may require it.
+            // Use your actual redirect URI from Google Cloud Console if needed.
+            $oauthProvider = new GoogleProvider([
+                'clientId'     => $clientId,
+                'clientSecret' => $clientSecret,
+                // 'redirectUri'  => 'YOUR_REDIRECT_URI_HERE', // Only if explicitly required by your League setup
+            ]);
+
+
+            // Set the OAuth 2.0 access token provider for PHPMailer
+            $mail->setOAuth(
+                new OAuth( // Use the imported OAuth class
+                    [
+                        'provider'      => $oauthProvider, // Pass the instance of League's Google Provider
+                        'clientId'      => $clientId,
+                        'clientSecret'  => $clientSecret,
+                        'refreshToken'  => $refreshToken,
+                        'userName'      => $fromEmail, // User email to send from
+                    ]
+                )
+            );
+
             // Recipients
-            $mail->setFrom($_ENV['MAIL_FROM'] ?? 'noreply@example.com', $_ENV['MAIL_FROM_NAME'] ?? 'Your App');
+            $mail->setFrom($fromEmail, $_ENV['MAIL_FROM_NAME'] ?? 'Your App');
             $mail->addAddress($to, $toName);
             
             // Content
@@ -42,11 +84,23 @@ class Mailer {
             
             $mail->send();
             return true;
+
         } catch (MailException $e) {
+            // Log the PHPMailer specific error message
             error_log("Mailer Error: " . $mail->ErrorInfo);
-            return "Mailer Error: " . $mail->ErrorInfo;
+            
+            // Provide a more user-friendly error message, especially for OAuth issues
+            if (strpos($e->getMessage(), 'invalid_grant') !== false || strpos($e->getMessage(), 'Authentication failed') !== false) {
+                 return "Mailer Error: Failed to authenticate with Google. Please ensure your Client ID, Client Secret, Refresh Token, and sender email are correct and valid. The refresh token might have expired or been revoked.";
+            } else {
+                 return "Mailer Error: " . $mail->ErrorInfo;
+            }
+        } catch (\Exception $e) { // Catch any other unexpected exceptions
+            error_log("General Error in Mailer: " . $e->getMessage());
+            return "An unexpected error occurred: " . $e->getMessage();
         }
     }
+
     
     /**
      * Send a verification email.

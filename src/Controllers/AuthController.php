@@ -1,11 +1,10 @@
 <?php
-// src/Controllers/AuthController.php
 namespace App\Controllers;
 
 use App\Database;
 use Delight\Auth\Auth;
 use Delight\Auth\Role;
-use App\Mailer;
+use App\Mailer; // Use our new Mailer class
 
 class AuthController {
 
@@ -33,9 +32,10 @@ class AuthController {
             $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
             $verificationLink = $protocol . $host . '/verify';
         }
+
         $emailStatusMessage = '';
         try {
-            $userId = $this->auth->register($email, $password, $username, function ($selector, $token) use (&$emailStatusMessage, $email, $username) {
+            $userId = $this->auth->register($email, $password, $username, function ($selector, $token) use (&$emailStatusMessage, $email, $username, $verificationLink) {
                 $verificationLink = $verificationLink . "/?selector=" . urlencode($selector) . "&token=" . urlencode($token);
                 
                 $result = Mailer::sendVerificationEmail($email, $username, $verificationLink);

@@ -1,5 +1,4 @@
 <?php
-// src/Controllers/PostController.php
 /*
  * This class will control queries related to posts, categories, users
  */
@@ -328,24 +327,26 @@ class PostController {
         // Trim to desired length
         return (strlen($text) > $length) ? substr($text, 0, $length) . '...' : $text;
     }
-    
+
     /**
      * Create a new post with default status 'draft'.
-     * Allows optional manual entry for description, keywords, slug, and creation date.
+     * Allows optional manual entry for description, keywords, slug, creation date, and whether comments are allowed.
      * If description is not provided, the first 100 characters of the content (stripped of HTML) are used.
      *
      * @param int    $userId
      * @param string $title
      * @param string $content
      * @param string $slug          (optional) - if not provided, auto-generated from the title.
-     * @param string $featureImage  (optional) - defaults to 'assets/image/default-feature.webp'.
+     * @param string $featureImage  (optional) - defaults to null.
      * @param string $description   (optional) - if not provided, auto-generated from content.
      * @param string $keywords      (optional) - comma-separated keywords.
      * @param string $createdAt     (optional) - if not provided, defaults to current timestamp.
+     * @param string $a_script      (optional)
+     * @param bool   $allowComments (optional) - whether comments are allowed (default: true).
      * @return int Last inserted post ID.
      */
-    public function create($userId, $title, $content, $slug = null, $featureImage = null, $description = '', $keywords = '', $createdAt = null, $a_script = null) {
-        // Allow users to manually override the slug; otherwise, auto-generate from the title.
+    public function create($userId, $title, $content, $slug = null, $featureImage = null, $description = '', $keywords = '', $createdAt = null, $a_script = null, $allowComments = true) {
+        // Auto-generate slug if not provided.
         if (empty($slug)) {
             $slug = $this->slugify($title);
         }
@@ -358,16 +359,16 @@ class PostController {
         
         $stmt = $this->pdo->prepare("
             INSERT INTO posts 
-            (user_id, title, content, slug, feature_image, description, keywords, status, created_at, a_script)
-            VALUES (?, ?, ?, ?, ?, ?, ?, 'draft', ?, ?)
+            (user_id, title, content, slug, feature_image, description, keywords, status, created_at, a_script, allow_comments)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'draft', ?, ?, ?)
         ");
-        $stmt->execute([$userId, $title, $content, $slug, $featureImage, $description, $keywords, $createdAt, $a_script]);
+        $stmt->execute([$userId, $title, $content, $slug, $featureImage, $description, $keywords, $createdAt, $a_script, $allowComments]);
         return $this->pdo->lastInsertId();
     }
 
     /**
      * Update an existing post with additional fields.
-     * Allows optional manual update of the 'created_at' date.
+     * Allows optional manual update of the 'created_at' date and whether comments are allowed.
      *
      * @param int         $postId
      * @param string      $title
@@ -377,9 +378,11 @@ class PostController {
      * @param string      $description    (Optional) Custom description. Auto-generated from content if empty.
      * @param string      $keywords       (Optional) Comma-separated keywords.
      * @param string|null $createdAt      (Optional) New created_at datetime in 'Y-m-d H:i:s' format. If not provided, leaves the current value unchanged.
+     * @param string|null $a_script       (Optional)
+     * @param bool|null   $allowComments  (Optional) If provided, update whether comments are allowed.
      * @return bool
      */
-    public function update($postId, $title, $content, $featureImage = null, $slug = '', $description = '', $keywords = '', $createdAt = null, $a_script = null) {
+    public function update($postId, $title, $content, $featureImage = null, $slug = '', $description = '', $keywords = '', $createdAt = null, $a_script = null, $allowComments = null) {
         // Auto-generate slug if not provided
         if (empty($slug)) {
             $slug = $this->slugify($title);
@@ -389,30 +392,33 @@ class PostController {
             $description = substr(strip_tags($content), 0, 100);
         }
         
-        // Build the base SQL query and parameters array
+        // Build base SQL query and parameters array.
         $fields = "title = ?, content = ?, slug = ?, description = ?, keywords = ?, a_script = ?";
         $params = [$title, $content, $slug, $description, $keywords, $a_script];
         
-        // Conditionally update feature image if provided
+        // Conditionally update feature image if provided.
         if ($featureImage !== null) {
             $fields .= ", feature_image = ?";
             $params[] = $featureImage;
         }
         
-        // Conditionally update created_at if provided
+        // Conditionally update created_at if provided.
         if ($createdAt !== null) {
             $fields .= ", created_at = ?";
             $params[] = $createdAt;
         }
         
-        // Always update updated_at to NOW()
-        $fields .= ", updated_at = NOW()";
+        // Conditionally update allow_comments if provided.
+        if ($allowComments !== null) {
+            $fields .= ", allow_comments = ?";
+            $params[] = $allowComments;
+        }
         
-        // Add the post ID for the WHERE clause
+        // Always update updated_at to NOW().
+        $fields .= ", updated_at = NOW()";
         $params[] = $postId;
         
-        $sql = "UPDATE posts SET $fields WHERE id = ?";
-        $stmt = $this->pdo->prepare($sql);
+        $stmt = $this->pdo->prepare("UPDATE posts SET $fields WHERE id = ?");
         return $stmt->execute($params);
     }
 

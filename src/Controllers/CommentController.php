@@ -1,5 +1,4 @@
 <?php
-// src/Controllers/CommentController.php
 namespace App\Controllers;
 
 use App\Database;
@@ -95,6 +94,11 @@ class CommentController {
      * @return bool
      */
     public function saveComment($postId, $author, $email, $comment) {
+        // Validate email
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return false; // Invalid email, do not save
+        }
+        
         // Check for URLs in the comment
         $containsLink = preg_match('/https?:\\/\\//i', $comment);
 
@@ -108,7 +112,7 @@ class CommentController {
         }
 
         // If contains link or banned word, mark as pending; else approved
-        $status = ($containsLink || $containsBanned) ? 'pending' : 'approved';
+        $status = 'pending'; //($containsLink || $containsBanned) ? 'pending' : 'approved';
 
         $stmt = $this->pdo->prepare("INSERT INTO comments (post_id, author, email, comment, status, created_at) VALUES (?, ?, ?, ?, ?, NOW())");
         return $stmt->execute([$postId, $author, $email, $comment, $status]);

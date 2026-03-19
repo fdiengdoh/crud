@@ -1,5 +1,4 @@
 <?php
-// src/Controllers/CategoryController.php
 namespace App\Controllers;
 
 use App\Database;
