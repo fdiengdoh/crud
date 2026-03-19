@@ -1,4 +1,8 @@
 <?php
+/* 
+ To use the XOAUTH2 Authentication with Google mail you can remove the Mailer.php file and replace it with this content. 
+ But keep in mind you need to setup Oauth with Google or any other service. Check PHPMailer repo for more examples
+*/
 namespace App;
 
 use PHPMailer\PHPMailer\PHPMailer;
