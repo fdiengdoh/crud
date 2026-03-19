@@ -1,6 +1,6 @@
 <?php
 /**
- * Sample init.php file
+ * init.php
  *
  * Central initialization for all public files.
  * - Sets error reporting based on environment.
@@ -13,8 +13,8 @@
 // Load Composer autoloader
 require_once __DIR__ . '/vendor/autoload.php';
 
-//Set cookie to work on subdomains if you want to
-//\ini_set('session.cookie_domain','yourdomain.com');
+//Set cookie to work on subdomains if needed
+//\ini_set('session.cookie_domain','example.com');
 
 // Define paths for convenience
 define('ROOT_DIR', __DIR__);
@@ -22,6 +22,8 @@ define('APP_DIR', ROOT_DIR . '/app');
 define('PUBLIC_DIR', ROOT_DIR . '/public_html');
 define('CACHE_CONFIG', ROOT_DIR . '/cache_config/config.php');
 define('CACHE_DIR', ROOT_DIR . '/cache_config/cache');
+define('GOOGLE_CLIENT_SECRET_PATH', ROOT_DIR . '/your_client_secret.json');
+define('GOOGLE_REFRESH_TOKEN_PATH', ROOT_DIR . '/your_refresh_token.json');
 
 // Load environment variables from the .env file located in the project root
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
@@ -39,6 +41,35 @@ foreach ($_ENV as $key => $value) {
 if (!defined('ENVIRONMENT')) {
     define('ENVIRONMENT', 'development'); // Change to 'production' on live servers.
 }
+
+// 1. Set Error Handler to log url
+function customErrorHandler($errno, $errstr, $errfile, $errline) {
+    // Check if error reporting is disabled for this type of error
+    if (!(error_reporting() & $errno)) {
+        return false;
+    }
+
+    // Capture the current URL, checking if it's available
+    $request_uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : 'CLI_OR_UNKNOWN_URI';
+
+    // Format the error message to include the URL
+    $log_message = sprintf(
+        "[%s] URL: %s | PHP Error: %s in %s on line %d\n",
+        date('Y-m-d H:i:s'),
+        $request_uri,
+        $errstr,
+        $errfile,
+        $errline
+    );
+
+    // Append the formatted message to the log file
+    error_log($log_message, 3, ROOT_DIR . '/logs/error.log');
+
+    // Prevent PHP's default error handler from running
+    return true;
+}
+// 2. Set the custom error handler
+set_error_handler("customErrorHandler");
 
 // Configure error reporting
 if (ENVIRONMENT === 'development') {
@@ -69,37 +100,3 @@ use Delight\Auth\Auth;
 $auth = new Auth($pdo);
 
 // Now, $pdo, $auth, and all .env variables (as constants) are available globally.
-
-//Add routes
-use App\Helpers\Link;
-$link = new Link();
-
-//Sample links for routing via index page
-$link->routes = [
-    ''                          => ['url' => BASE_URL . '/', 'file' => APP_DIR . '/home.php'],
-    '/'                         => ['url' => BASE_URL . '/', 'file' => APP_DIR . '/home.php'],
-    //Admin Area
-    '/admin/categories'         => ['url' => LOGIN_URL . '/admin/categories', 'file' => APP_DIR . '/admin/admin-categories.php'],
-    '/admin/flag-comment'       => ['url' => LOGIN_URL . '/admin/flag-comment', 'file' => APP_DIR . '/admin/admin-flag-comment.php'],
-    '/admin'                    => ['url' => LOGIN_URL . '/admin', 'file' => APP_DIR . '/admin/admin-panel.php'],
-    '/admin/upload-image'       => ['url' => LOGIN_URL . '/admin/upload-image', 'file' => APP_DIR . '/admin/upload-image.php'],
-    '/admin/view-logs'          => ['url' => LOGIN_URL . '/admin/view-logs', 'file' => APP_DIR . '/admin/view-logs.php'],
-
-    //Users Area
-    '/users'                    => ['url' => LOGIN_URL . '/users', 'file' => APP_DIR . '/users/my-posts.php'],
-    '/users/edit-profile'       => ['url' => LOGIN_URL . '/users/edit-profile', 'file' => APP_DIR . '/users/edit-profile.php'],
-    '/users/forgot-password'    => ['url' => LOGIN_URL . '/users/forgot-password', 'file' => APP_DIR . '/users/forgot-password.php'],
-    '/users/post-create'        => ['url' => LOGIN_URL . '/users/post-create', 'file' => APP_DIR . '/users/post-create.php'],
-    '/users/post-delete'        => ['url' => LOGIN_URL . '/users/post-delete', 'file' => APP_DIR . '/users/post-delete.php'],
-    '/users/post-edit'          => ['url' => LOGIN_URL . '/users/post-edit', 'file' => APP_DIR . '/users/post-edit.php'],
-    '/users/reset-password'     => ['url' => LOGIN_URL . '/users/reset-password', 'file' => APP_DIR . '/users/reset-password.php'],
-    '/users/register'           => ['url' => LOGIN_URL . '/users/register', 'file' => APP_DIR . '/users/register.php'],
-    '/users/verify'             => ['url' => LOGIN_URL . '/users/verify', 'file' => APP_DIR . '/users/verify.php'],
-    '/users/login'              => ['url' => LOGIN_URL . '/users/login', 'file' => APP_DIR . '/users/login.php' ],
-    '/ajax-handler'             => ['url' => BASE_URL  . '/ajax-handler', 'file' => APP_DIR . '/users/ajax_handler.php'],
-
-    //General Authentication Related
-    
-    '/logout'                   => ['url' => LOGIN_URL . '/logout', 'file' => null ],
-    '/report-comment'           => ['url' => BASE_URL . '/report-comment', 'file' => APP_DIR . '/report-comment.php'],
-];
