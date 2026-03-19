@@ -2,6 +2,10 @@
 
 This is a PHP-based CRUD Blog App that uses PSR-4 autoloading that features pretty URLs, a custom caching system, authentication via [delight-im/auth](https://github.com/delight-im/PHP-Auth), [PHP Mailer](https://github.com/PHPMailer/PHPMailer) for sending email and flexible routing system. The CRUD system would allow admin/authors for creating posts and admins to manage categories. A public viewer can comment on a post. 
 
+# Why this WebApp?
+
+I use to host my website as a blogger.com site. When I want to change to other hosting platform, it became difficult to maintain links. This app url will resemble Blogger's way of linking categories as label and other permalinks too. 
+
 # Theme
 
 This app is styled using [Bootstrap 5.3](https://getbootstrap.com) and I've made minor changes to the colour scheme. You can take a look at the theme files that are kept in [public_html](public_html) directory. 
