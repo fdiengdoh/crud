@@ -22,8 +22,6 @@ define('APP_DIR', ROOT_DIR . '/app');
 define('PUBLIC_DIR', ROOT_DIR . '/public_html');
 define('CACHE_CONFIG', ROOT_DIR . '/cache_config/config.php');
 define('CACHE_DIR', ROOT_DIR . '/cache_config/cache');
-define('GOOGLE_CLIENT_SECRET_PATH', ROOT_DIR . '/your_client_secret.json');
-define('GOOGLE_REFRESH_TOKEN_PATH', ROOT_DIR . '/your_refresh_token.json');
 
 // Load environment variables from the .env file located in the project root
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
