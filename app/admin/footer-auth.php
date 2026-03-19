@@ -1,5 +1,5 @@
 <?php
-// app/admin/footer-auth.php
+// app/footer.php
 ?>
   <!-- Footer -->
   <footer class="bg-light py-3 mt-5">

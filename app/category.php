@@ -1,6 +1,6 @@
 <?php
 // app/category.php
-require_once __DIR__ . '/../init.php';
+// require_once __DIR__ . '/../init.php';
 
 use App\Controllers\CategoryController;
 use App\Controllers\PostController;
@@ -57,7 +57,7 @@ include APP_DIR . '/include/header.php';
                         <div class="card p-0 mb-3">
                            <div class="row g-0">
                              <div class="col-md-4">
-                                  <img loading="lazy" src="<?= htmlspecialchars($post['feature_image'] ?? ' ', ENT_QUOTES, 'UTF-8'); ?>" class="rounded-start lazyload" height="225" width="100%" style="object-fit: cover;" alt="<?= htmlspecialchars($post['title'] ?? ' ', ENT_QUOTES, 'UTF-8'); ?>">
+                                  <img loading="lazy" src="<?= htmlspecialchars($post['feature_image'] ?? ' ', ENT_QUOTES, 'UTF-8'); ?>" class="rounded-start lazyload" height="225" width="100%" style="object-fit: cover;width:100%; height:100%" alt="<?= htmlspecialchars($post['title'] ?? ' ', ENT_QUOTES, 'UTF-8'); ?>">
                              </div>
                              <div class="col-md-8 z-10 bg-light">
                                <div class="card-body">

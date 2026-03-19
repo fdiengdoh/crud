@@ -1,6 +1,6 @@
 <?php
 // app/home.php
-require_once __DIR__ . '/../init.php';
+// require_once __DIR__ . '/../init.php';
 
 use App\Controllers\PostController;
 use App\Controllers\CategoryController;
@@ -39,7 +39,7 @@ if (!empty($featuredPosts)): ?>
    <div class="carousel-inner">
       <?php foreach ($featuredPosts as $index => $post): ?>
       <div class="carousel-item <?php echo $index === 0 ? 'active' : ''; ?>">
-         <img  src="<?= htmlspecialchars($post['feature_image'] ?? ' ', ENT_QUOTES, 'UTF-8'); ?>" class="carousel-img " alt="<?= $post['title'] ?>">
+         <img  src="<?= htmlspecialchars($post['feature_image'] ?? ' ', ENT_QUOTES, 'UTF-8'); ?>" class="carousel-img " width="1600" height="900" alt="<?= $post['title'] ?>">
          <div class="container">
             <div class="carousel-caption rounded p-3">
                <h2 class="text-truncate"><?= htmlspecialchars($post['title'] ?? ' ', ENT_QUOTES, 'UTF-8'); ?></h2>
@@ -81,7 +81,7 @@ if (!empty($featuredPosts)): ?>
                <!-- Posts -->
                <div class="col">
                   <div class="card shadow-sm">
-                     <img  src="<?= $catPosts[0]['feature_image'] ?>" height="200" width="100%" style="object-fit: cover;" alt="<?= $catPosts[0]['title'] ?>">
+                     <img  src="<?= $catPosts[0]['feature_image'] ?>" height="268" width="478" style="object-fit: cover;width:100%; height:100%" alt="<?= $catPosts[0]['title'] ?> class="img-fluid">
                      <div class="card-body">
                         <h5 class="card-text"><?= $catPosts[0]['title'] ?></h5>
                         <p class="card-text"><?= $catPosts[0]['excerpt'] ?></p>
@@ -99,7 +99,7 @@ if (!empty($featuredPosts)): ?>
                <!-- Posts -->
                <div class="col mb-2">
                   <div class="card"><a href="<?= $catPost['slug'] ?>">
-                     <img src="<?= $catPost['feature_image'] ?>" class="card-img" height="120" width="100%" style="object-fit: cover;" alt="<?= $catPost['title'] ?>">
+                     <img src="<?= $catPost['feature_image'] ?>" class="card-img" height="120" width="213" style="object-fit: cover;width:100%; height:100%" alt="<?= $catPost['title'] ?>">
                      <div class="card-img-overlay">
                         <p class="card-title text-bg-dark opacity-75 text-white p-2"><?= $catPost['title'] ?></p>
                      </div>

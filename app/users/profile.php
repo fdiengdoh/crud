@@ -1,6 +1,6 @@
 <?php
-// app/users/profile.php
-require_once __DIR__ . '/../../init.php';
+// app/profile.php
+// require_once __DIR__ . '/../../init.php';
 
 use App\Controllers\ProfileController;
 use App\Controllers\PostController;

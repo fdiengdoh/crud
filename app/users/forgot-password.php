@@ -1,6 +1,6 @@
 <?php
-// app/users/forgot-password.php
-require_once __DIR__ . '/../../init.php';
+// public/forgot-password.php
+// require_once __DIR__ . '/../../init.php';
 
 use App\Controllers\AuthController;
 

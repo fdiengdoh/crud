@@ -1,6 +1,6 @@
 <?php
-// app/users/edit-profile.php
-require_once __DIR__ . '/../../init.php';
+// app/admin/profile.php
+// require_once __DIR__ . '/../../init.php';
 
 use App\Controllers\ProfileController;
 use App\Helpers\AuthHelper;
@@ -57,6 +57,19 @@ $bio       = $profile['bio'] ?? '';
 $profilePicture = $profile['profile_picture'] ?? '/assets/default-profile.png';
 
 $pageTitle = "Profile - Blog App";
+$_BSCRIPTS = "<script>
+  (function () {
+    'use strict';
+    const form = document.querySelector('.needs-validation');
+    form.addEventListener('submit', function (event) {
+      if (!form.checkValidity()) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      form.classList.add('was-validated');
+    }, false);
+  })();
+</script>";
 include APP_DIR . '/admin/header-auth.php';
 ?>
 
@@ -90,21 +103,5 @@ include APP_DIR . '/admin/header-auth.php';
     <button type="submit" class="btn btn-primary">Save Profile</button>
   </form>
 </div>
-
-<!-- Bootstrap 5 JS Bundle -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-  (function () {
-    'use strict';
-    const form = document.querySelector('.needs-validation');
-    form.addEventListener('submit', function (event) {
-      if (!form.checkValidity()) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
-      form.classList.add('was-validated');
-    }, false);
-  })();
-</script>
 
 <?php include APP_DIR . '/admin/footer-auth.php'; ?>

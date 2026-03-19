@@ -1,6 +1,6 @@
 <?php
-// app/users/post-edit.php
-require_once __DIR__ . '/../../init.php';
+// app/admin/post-edit.php
+// require_once __DIR__ . '/../../init.php';
 
 use App\Controllers\PostController;
 use App\Controllers\MediaController;
@@ -55,11 +55,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $description   = trim($_POST['description'] ?? '');   // Optional description
     $keywords      = trim($_POST['keywords'] ?? '');      // Optional keywords
     $selectedCategories = $_POST['categories'] ?? [];
-    $createdAt = trim($_POST['created-at'] ?? ''); // expecting format "YYYY-MM-DD HH:MM:SS"
+    $createdAt = trim($_POST['created-at'] ?? '');        // expecting format "YYYY-MM-DD HH:MM:SS"
+    $allowComments  = trim($_POST['allow-comments'] ?? '');     // Optional created date
     
-  if (empty($createdAt)) {
-      $createdAt = null;
-  } 
+    if (empty($createdAt)) {
+        $createdAt = null;
+    }
+    
+    empty($allowComments) ? $allowComments = 0 : $allowComments = 1;
+
     // Process file upload for feature image
     $featureImage = $post['feature_image']; // default: keep existing image
     if (isset($_FILES['feature_image']) && $_FILES['feature_image']['error'] === UPLOAD_ERR_OK) {
@@ -71,8 +75,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     
-    // Update the post with additional fields: slug, description, keywords.
-    $result = $postController->update($postId, $title, $content, $featureImage, $slug, $description, $keywords, $createdAt, $a_script);
+    /** Update the post with additional fields: slug, description, keywords.
+     * * @param int         $postId
+     * @param string      $title
+     * @param string      $content
+     * @param string|null $featureImage   If provided, update the feature image; otherwise, keep the current one.
+     * @param string      $slug           (Optional) Custom slug. Auto-generated from the title if empty.
+     * @param string      $description    (Optional) Custom description. Auto-generated from content if empty.
+     * @param string      $keywords       (Optional) Comma-separated keywords.
+     * @param string|null $createdAt      (Optional) New created_at datetime in 'Y-m-d H:i:s' format. If not provided, leaves the current value unchanged.
+     * @param string|null $a_script       (Optional)
+     * @param bool|null   $allowComments  (Optional) If provided, update whether comments are allowed.
+     * @return bool
+     * public function update($postId, $title, $content, $featureImage = null, $slug = '', $description = '', $keywords = '', $createdAt = null, $a_script = null, $allowComments = null)
+     * */
+    $result = $postController->update($postId, $title, $content, $featureImage, $slug, $description, $keywords, $createdAt, $a_script, $allowComments);
     $cache->clearCache('/'.$slug);
     if ($result) {
         $postController->assignCategoriesToPost($postId, $selectedCategories);
@@ -109,6 +126,20 @@ $_TSCRIPTS = "<!-- TinyMCE for rich text editing -->
       sandbox_iframes: false,
     });
   </script>";
+
+  $_BSCRIPTS = "<script>
+  (function () {
+    'use strict';
+    const form = document.querySelector('.needs-validation');
+    form.addEventListener('submit', function (event) {
+      if (!form.checkValidity()) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      form.classList.add('was-validated');
+    }, false);
+  })();
+</script>";
 
 // Set a page title for the header if desired
 $pageTitle = "My Posts - Edit Post";
@@ -166,6 +197,13 @@ include APP_DIR . '/admin/header-auth.php';
     </div>
 
     <div class="mb-3">
+      <label class="form-check-label" for="allow-comments">Allow Comments?</label>
+      <div class="form-check form-switch">
+        <input class="form-check-input" style="width:3em;height:1.5em;" name="allow-comments" type="checkbox" role="switch" id="allow-comments">
+      </div>
+    </div>
+
+    <div class="mb-3">
       <label for="created_at" class="form-label">Select Date of Post (Optional)</label>
       <input type="datetime-local" id="created-at" class="form-control" name="created-at">
     </div>
@@ -180,20 +218,5 @@ include APP_DIR . '/admin/header-auth.php';
         <p>&lt;script&gt;<br>&nbsp; &nbsp; &nbsp; &nbsp; MathJax = {<br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; tex: {&nbsp;<br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; tags:'ams',<br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; inlineMath: [['$', '$'], ['\\(', '\\)']],&nbsp;<br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; autoload: {gensymb: ['celsius', 'degree', 'micro', 'ohm', 'perthousand']},<br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; },<br>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; svg: {fontCache: 'global'}<br>&nbsp; &nbsp; &nbsp; &nbsp; };<br>&lt;/script&gt;<br>&lt;script rel="preload" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" as="script"&gt;&lt;/script&gt;</p>
     </div>
 </div>
-  
-<!-- Bootstrap 5 JS Bundle -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-  (function () {
-    'use strict';
-    const form = document.querySelector('.needs-validation');
-    form.addEventListener('submit', function (event) {
-      if (!form.checkValidity()) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
-      form.classList.add('was-validated');
-    }, false);
-  })();
-</script>
+
 <?php include APP_DIR . '/admin/footer-auth.php'; ?>

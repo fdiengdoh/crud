@@ -1,6 +1,6 @@
 <?php
 // app/single-post.php
-require_once __DIR__ . '/../init.php';
+// require_once __DIR__ . '/../init.php';
 
 use App\Controllers\PostController;
 use App\Controllers\CommentController;
@@ -66,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment'])) {
     
     if (!empty($author) && !empty($email) && !empty($comment)) {
         $saved = $commentController->saveComment($post['id'], $author, $email, $comment);
-        $commentMessage = $saved ? "Your comment was submitted." : "Failed to submit your comment.";
+        $commentMessage = $saved ? "Your comment will be publish after moderation." : "Failed to submit your comment.";
     } else {
         $commentMessage = "Please fill in all fields.";
     }
@@ -131,7 +131,7 @@ include APP_DIR . '/include/header.php';
                            <?php if($prevPost): ?>
                            <div class="card text-white my-2">
                                 <a href="<?= BASE_URL ?>/<?= $prevPost['slug'] ?>" class="btn btn-link">
-                                  <img loading="lazy" src="<?= $prevPost['feature_image'] ?>" class="card-img lazyload" style="object-fit: cover;" alt="<?= $prevPost['title'] ?>">
+                                  <img loading="lazy" src="<?= $prevPost['feature_image'] ?>" class="card-img lazyload" style="object-fit: cover;width:100%; height:100%" alt="<?= $prevPost['title'] ?>">
                                   <div class="card-img-overlay">
                                      <h5 class="card-title bg-dark rounded text-white"><?= $prevPost['title'] ?></h5>
                                   </div>
@@ -144,7 +144,7 @@ include APP_DIR . '/include/header.php';
                            <?php if($nextPost): ?>
                            <div class="card text-white my-2">
                                <a href="<?= BASE_URL ?>/<?= $nextPost['slug'] ?>" class="btn btn-link">
-                                  <img loading="lazy" src="<?= $nextPost['feature_image'] ?>" class="card-img lazyload" style="object-fit: cover;" alt="<?= $nextPost['title'] ?>">
+                                  <img loading="lazy" src="<?= $nextPost['feature_image'] ?>" class="card-img lazyload" style="object-fit: cover;width:100%; height:100%" alt="<?= $nextPost['title'] ?>">
                                   <div class="card-img-overlay">
                                      <h5 class="card-title bg-dark rounded text-white"><?= $nextPost['title'] ?></h5>
                                   </div>
@@ -156,59 +156,112 @@ include APP_DIR . '/include/header.php';
                      </div> <!-- Row Ends -->
                   </div>
                   <!-- Radom Blog End -->
-<!-- Comment Sections Here --> 
- <div class="p-3">
-   <!-- Display Approved Comments -->
-<div class="mb-5">
-  <h3><i class="bi bi-chat-fill"></i> Comments</h3>
-  <?php if (!empty($comments)): ?>
+                  <!-- Only show if allow_comments is true -->
+                  <?php if ($post['allow_comments']): ?>
+                  <!-- Comment Section with Tabs -->
+                  <div class="container my-4">
+                    <!-- Nav tabs -->
+                    <ul class="nav nav-tabs" id="commentTabs" role="tablist">
+                      <li class="nav-item" role="presentation">
+                        <button class="nav-link active text-dark" id="native-tab" data-bs-toggle="tab" data-bs-target="#native" type="button" role="tab" aria-controls="native" aria-selected="true">
+                          Comments
+                        </button>
+                      </li>
+                      <li class="nav-item" role="presentation">
+                        <button class="nav-link text-dark" id="fb-tab" data-bs-toggle="tab" data-bs-target="#fb" type="button" role="tab" aria-controls="fb" aria-selected="false">
+                          Facebook Comments
+                        </button>
+                      </li>
+                      <li class="nav-item" role="presentation">
+                        <button class="nav-link text-dark" id="disqus-tab" data-bs-toggle="tab" data-bs-target="#disqus" type="button" role="tab" aria-controls="disqus" aria-selected="false">
+                          Disqus Comments
+                        </button>
+                      </li>
+                    </ul>
+                    
+                    <!-- Tab panes -->
+                    <div class="tab-content p-3 border border-top-0 rounded-bottom" id="commentTabsContent">
+                      <!-- Native Comment System -->
+                      <div class="tab-pane fade show active" id="native" role="tabpanel" aria-labelledby="native-tab">
+                        <!-- Existing Native Comments Display -->
+                        <div class="mb-1">
+                          <h3><i class="bi bi-chat-fill"></i> Comments</h3>
+                          <?php if (!empty($comments)): ?>
+                            <ul class="list-group">
+                              <?php foreach ($comments as $comm): ?>
+                                <li class="list-group-item">
+                                  <strong><?= htmlspecialchars($comm['author'] ?? ' ', ENT_QUOTES, 'UTF-8'); ?></strong>
+                                  on <?= htmlspecialchars($comm['created_at'] ?? ' ', ENT_QUOTES, 'UTF-8'); ?> said:
+                                  <p><?= nl2br(htmlspecialchars($comm['comment'] ?? ' ', ENT_QUOTES, 'UTF-8')); ?></p>
+                                  <!-- Report Form for Comment -->
+                                  <form method="post" action="<?= BASE_URL ?>/report-comment" onsubmit="return confirm('Report this comment for review?');" style="display:inline;">
+                                    <input type="hidden" name="id" value="<?= htmlspecialchars($comm['id']); ?>">
+                                    <input type="hidden" name="slug" value="<?= htmlspecialchars($post['slug']); ?>">
+                                    <button type="submit" class="btn btn-link p-0 m-0 align-baseline small text-danger">Report</button>
+                                  </form>
+                                </li>
+                              <?php endforeach; ?>
+                            </ul>
+                          <?php else: ?>
+                            <p>No comments yet.</p>
+                          <?php endif; ?>
+                        </div>
+                        <!-- Native Comment Form -->
+                        <div class="mb-1">
+                          <h3>Leave a Comment</h3>
+                          <?php if ($commentMessage): ?>
+                            <div class="alert alert-info"><?= htmlspecialchars($commentMessage ?? ' ', ENT_QUOTES, 'UTF-8'); ?></div>
+                          <?php endif; ?>
+                          <form method="post" action="" novalidate>
+                            <div class="mb-3">
+                              <label for="author" class="form-label">Name</label>
+                              <input type="text" class="form-control" id="author" name="author" placeholder="Your name" required>
+                              <input type="hidden" name="refresh" value="1">
+                            </div>
+                            <div class="mb-3">
+                              <label for="email" class="form-label">Email</label>
+                              <input type="email" class="form-control" id="email" name="email" placeholder="Your email" required>
+                            </div>
+                            <div class="mb-3">
+                              <label for="comment" class="form-label">Comment</label>
+                              <textarea class="form-control" id="comment" name="comment" rows="4" placeholder="Your comment" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Submit Comment</button>
+                          </form>
+                        </div>
+                      </div>
+                      
+                      <!-- Facebook Comments Tab -->
+                      <div class="tab-pane fade" id="fb" role="tabpanel" aria-labelledby="fb-tab">
+                        <!-- Facebook Comments Plugin -->
+                        <div id="fb-root"></div>
+                        <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v22.0"></script>
+                        <div class="fb-comments" data-href="<?= BASE_URL . '/' . htmlspecialchars($post['slug']) ?>" data-width="100%" data-numposts="5"></div>
+                      </div>
+                      
+                      <!-- Disqus Comments Tab -->
+                      <div class="tab-pane fade" id="disqus" role="tabpanel" aria-labelledby="disqus-tab">
+                        <!-- Disqus Comments Embed -->
+                        <div id="disqus_thread"></div>
+                        <script>
+                          var disqus_config = function () {
+                            this.page.url = "<?= BASE_URL . '/' . htmlspecialchars($post['slug']) ?>";
+                            this.page.identifier = "post_<?= $post['id'] ?>";
+                          };
+                          (function() { // DON'T EDIT BELOW THIS LINE
+                            var d = document, s = d.createElement('script');
+                            s.src = 'https://fdiengdoh.disqus.com/embed.js';
+                            s.setAttribute('data-timestamp', +new Date());
+                            (d.head || d.body).appendChild(s);
+                          })();
+                        </script>
+                        <noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+                      </div>
+                    </div>
+                  </div>
 
-    <ul class="list-group">
-      <?php foreach ($comments as $comm): ?>
-        <li class="list-group-item">
-          <strong><?= htmlspecialchars($comm['author'] ?? ' ', ENT_QUOTES, 'UTF-8'); ?></strong> on <?= htmlspecialchars($comm['created_at'] ?? ' ', ENT_QUOTES, 'UTF-8'); ?> said:
-          <p><?= nl2br(htmlspecialchars($comm['comment'] ?? ' ', ENT_QUOTES, 'UTF-8')); ?></p>
-          <!-- Report Link: Calls report-comment.php with the comment ID -->
-          <form method="post" action="<?= BASE_URL ?>/report-comment" onsubmit="return confirm('Report this comment for review?');" style="display:inline;">
-            <input type="hidden" name="id" value="<?= htmlspecialchars($comm['id']); ?>">
-            <input type="hidden" name="slug" value="<?= htmlspecialchars($post['slug']); ?>">
-            <button type="submit" class="btn btn-link p-0 m-0 align-baseline small text-danger">Report</button>
-          </form>
-          <?php if(isset($_REQUEST['report-msg'])): ?>
-            <div class="alert alert-info" role="alert"><?= htmlspecialchars($_REQUEST['report-msg'] ?? ' ', ENT_QUOTES, 'UTF-8') ?></div>
-          <?php endif; ?>
-        </li>
-      <?php endforeach; ?>
-    </ul>
-  <?php else: ?>
-    <p>No comments yet.</p>
-  <?php endif; ?>
-</div>  
-     <!-- Comment Form -->
-  <div class="mb-5">
-    <h3>Leave a Comment</h3>
-    <?php if ($commentMessage): ?>
-      <div class="alert alert-info"><?= htmlspecialchars($commentMessage ?? ' ', ENT_QUOTES, 'UTF-8'); ?></div>
-    <?php endif; ?>
-    <form method="post" action="" novalidate>
-      <div class="mb-3">
-        <label for="author" class="form-label">Name</label>
-        <input type="text" class="form-control" id="author" name="author" placeholder="Your name" required>
-        <input type="hidden" name="refresh" value="1" >
-      </div>
-      <div class="mb-3">
-        <label for="email" class="form-label">Email</label>
-        <input type="email" class="form-control" id="email" name="email" placeholder="Your email" required>
-      </div>
-      <div class="mb-3">
-        <label for="comment" class="form-label">Comment</label>
-        <textarea class="form-control" id="comment" name="comment" rows="4" placeholder="Your comment" required></textarea>
-      </div>
-      <button type="submit" class="btn btn-primary">Submit Comment</button>
-    </form>
-  </div>
- </div>
- <!-- Comment Sections Ends --> 
+                  <!-- Comment Sections Ends --> 
+                    <?php endif; ?>
                </div>
             <?php require_once(APP_DIR . '/include/sidebar.php'); ?>
             

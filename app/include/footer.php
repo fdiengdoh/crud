@@ -89,9 +89,108 @@
          </symbol>
       </svg>
       <!-- SVG File for LOGO Ends -->
-      <script rel="preload" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous" as="script"></script>
+      <script rel="preload" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous" as="script"></script>
       <?= $BScripts ?>
       <script>
+         //Subscription Script
+      let subBtn = document.getElementById("subscribe");
+      subBtn.addEventListener('click', function(event) {
+         // Prevent default form submission if it were a submit button inside a form
+         // Although our button is type="button", it's good practice for forms.
+         event.preventDefault();
+
+         let full_name_input = document.getElementById("sub_full_name");
+         let email_input = document.getElementById("sub_email");
+         let notify_element = document.getElementById("notify");
+
+         let full_name = full_name_input.value.trim();
+         let email = email_input.value.trim();
+
+         let isValid = true; // Flag to track overall form validity
+
+         // --- Reset previous validation states ---
+         full_name_input.classList.remove('is-invalid', 'is-valid');
+         email_input.classList.remove('is-invalid', 'is-valid');
+         notify_element.innerHTML = ''; // Clear general notification
+         notify_element.classList.remove('text-success', 'text-danger'); // Remove color classes
+
+         // --- Input Validation ---
+
+         // 1. Validate Full Name
+         if (full_name === "") {
+            full_name_input.classList.add('is-invalid');
+            isValid = false;
+         } else if (full_name.length < 3) {
+            full_name_input.classList.add('is-invalid');
+            isValid = false;
+         } else {
+            full_name_input.classList.add('is-valid'); // Mark as valid if checks pass
+         }
+
+         // 2. Validate Email
+         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+         if (email === "") {
+            email_input.classList.add('is-invalid');
+            emailFeedback.textContent = "Email cannot be empty.";
+            isValid = false;
+         } else if (!emailRegex.test(email)) {
+            email_input.classList.add('is-invalid');
+            emailFeedback.textContent = "Please enter a valid email address.";
+            isValid = false;
+         } else {
+            email_input.classList.add('is-valid'); // Mark as valid if checks pass
+         }
+
+         // --- If any validation failed, stop here ---
+         if (!isValid) {
+            notify_element.innerHTML = "Please fix the errors in the form.";
+            notify_element.classList.add('text-danger'); // Bootstrap class for red text
+            return;
+         }
+
+         // --- If all validations pass, proceed with AJAX ---
+         // Using URLSearchParams for proper encoding
+         const params = new URLSearchParams();
+         params.append('subscribe', 'true');
+         params.append('email', email);
+         params.append('full_name', full_name);
+
+         // Show a loading message
+         notify_element.innerHTML = "Subscribing...";
+         notify_element.classList.remove('text-success', 'text-danger'); // Ensure no old colors
+         notify_element.style.color = "blue"; // Optional: blue for loading (Bootstrap doesn't have a specific loading color class)
+
+
+         fetch(`<?= BASE_URL ?>/ajax-handler?${params.toString()}`)
+            .then(response => {
+                  if (!response.ok) {
+                     throw new Error(`HTTP error! status: ${response.status}`);
+                  }
+                  return response.json();
+            })
+            .then(data => {
+                  if (data.success) {
+                     notify_element.innerHTML = data.message || "Subscribed Successfully!";
+                     notify_element.classList.remove('text-danger');
+                     notify_element.classList.add('text-success'); // Bootstrap class for green text
+                     // Clear input fields and validation states on success
+                     full_name_input.value = "";
+                     email_input.value = "";
+                     full_name_input.classList.remove('is-valid');
+                     email_input.classList.remove('is-valid');
+                  } else {
+                     notify_element.innerHTML = data.message || "Error in subscribing";
+                     notify_element.classList.remove('text-success');
+                     notify_element.classList.add('text-danger');
+                  }
+            })
+            .catch(error => {
+                  console.error('There was a problem with the fetch operation:', error);
+                  notify_element.innerHTML = "Network or server error. Please try again later.";
+                  notify_element.classList.remove('text-success');
+                  notify_element.classList.add('text-danger');
+            });
+      });
          // Show/hide the button based on window scroll position
         window.addEventListener('scroll', function () {
           if (window.scrollY > 100) {

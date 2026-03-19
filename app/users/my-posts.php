@@ -1,6 +1,6 @@
 <?php
-// app/users/my-posts.php
-require_once __DIR__ . '/../../init.php';
+// app/my-posts.php
+// require_once __DIR__ . '/../../init.php';
 
 use App\Controllers\PostController;
 use App\Controllers\CategoryController;
@@ -50,7 +50,7 @@ $message = $_GET['msg'] ?? '';
             <div class="card p-0 mb-2">
                 <div class="row g-0">
                     <div class="col-md-2">
-                        <img src="<?= htmlspecialchars($post['feature_image'] ?? ' ', ENT_QUOTES, 'UTF-8'); ?>" class="rounded-start" height="125" width="100%" style="object-fit: cover;" alt="<?= htmlspecialchars($post['title'] ?? ' ', ENT_QUOTES, 'UTF-8'); ?>">
+                        <img src="<?= htmlspecialchars($post['feature_image'] ?? ' ', ENT_QUOTES, 'UTF-8'); ?>" class="rounded-start" height="125" width="100%" style="object-fit: cover;width:100%; height:100%" alt="<?= htmlspecialchars($post['title'] ?? ' ', ENT_QUOTES, 'UTF-8'); ?>">
                     </div>
                     <div class="col-md-7 z-10 bg-light">
                         <div class="card-body">

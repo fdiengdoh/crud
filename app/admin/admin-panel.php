@@ -1,6 +1,5 @@
 <?php
 // app/admin/admin-panel.php
-require_once __DIR__ . '/../../init.php';
 
 use App\Controllers\PostController;
 use App\Controllers\CommentController;
@@ -40,34 +39,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_user_id'])) {
         exit;
     }
 }
-//clear all cache
-if(isset($_GET['clear-cache'])){
+
+// Clear all cache option.
+if (isset($_GET['clear-cache'])) {
     $cache->clearAllCache();
     header("Location: " . $link->getUrl("/admin") . "?msg=" . urlencode("Cache cleared successfully"));
     exit;
 }
-// Process publish action if provided via GET parameter
+
+// Process publish action if provided via GET parameter.
 if (isset($_GET['publish']) && is_numeric($_GET['publish'])) {
     $postController = new PostController();
     $postId = intval($_GET['publish']);
     $postController->publish($postId);
-    //clear all cache after publish
+    // Clear all cache after publish.
     $cache->clearAllCache();
     header("Location: " . $link->getUrl("/admin") . "?msg=" . urlencode("Post published successfully"));
     exit;
 }
 
-// Retrieve message from GET parameter if available
+// Process user deletion if requested (new option)
+if (isset($_GET['delete_user']) && is_numeric($_GET['delete_user'])) {
+    $deleteUserId = intval($_GET['delete_user']);
+    try {
+        // You would implement a deleteUser method or similar logic here.
+        // For example:
+        $auth->admin()->deleteUserById($deleteUserId);
+        header("Location: " . $link->getUrl("/admin") . "?msg=" . urlencode("User deleted successfully"));
+        exit;
+    } catch (\Exception $e) {
+        header("Location: " . $link->getUrl("/admin") . "?msg=" . urlencode("Error deleting user: " . $e->getMessage()));
+        exit;
+    }
+}
+
+// Retrieve message from GET parameter if available.
 $msg = $_GET['msg'] ?? '';
 
 $postController = new PostController();
 
-// Retrieve posts with 'draft' status for review
+// Retrieve posts with 'draft' status for review.
 $stmt = $pdo->prepare("SELECT * FROM posts WHERE status = 'draft' ORDER BY created_at DESC");
 $stmt->execute();
 $draftPosts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Retrieve all users for role management
+// Retrieve all users for role management.
+// Note: delight‑im/auth stores roles in the "roles_mask" column.
 $stmtUsers = $pdo->query("SELECT id, email, username, roles_mask as role FROM users ORDER BY username ASC");
 $users = $stmtUsers->fetchAll(PDO::FETCH_ASSOC);
 
@@ -114,7 +131,7 @@ include APP_DIR . '/admin/header-auth.php';
     <p>No draft posts available for publishing.</p>
   <?php endif; ?>
   
-  <!-- Section 2: User Role Management -->
+  <!-- Section 2: User Role Management & Deletion -->
   <h2>User Role Management</h2>
   <table class="table table-bordered mb-5">
     <thead>
@@ -124,7 +141,8 @@ include APP_DIR . '/admin/header-auth.php';
         <th>Username</th>
         <th>Current Role</th>
         <th>New Role</th>
-        <th>Action</th>
+        <th>Update Role</th>
+        <th>Delete User</th>
       </tr>
     </thead>
     <tbody>
@@ -158,6 +176,10 @@ include APP_DIR . '/admin/header-auth.php';
           <td>
               <button type="submit" class="btn btn-primary btn-sm">Update</button>
             </form>
+          </td>
+          <td>
+            <!-- New Delete User Option -->
+            <a href="<?= $link->getUrl('/admin') ?>/?delete_user=<?php echo $user['id']; ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this user?');">Delete</a>
           </td>
         </tr>
       <?php endforeach; ?>

@@ -1,6 +1,6 @@
 <?php
-// app/users/post-delete.php
-require_once __DIR__ . '/../../init.php';
+// public/post-delete.php
+// require_once __DIR__ . '/../../init.php';
 use App\Controllers\PostController;
 use App\Utils\Cache;
 

@@ -1,6 +1,6 @@
 <?php
-// app/users/post-crate.php
-require_once __DIR__ . '/../../init.php';
+// app/admin/post-crate.php
+// require_once __DIR__ . '/../../init.php';
 
 use App\Controllers\PostController;
 use App\Controllers\CategoryController;
@@ -31,10 +31,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $a_script      = trim($_POST['a_script'] ?? '');      // Optional additional scripts
     $selectedCategories = $_POST['categories'] ?? [];
     $createdAt      = trim($_POST['created-at'] ?? '');     // Optional created date
+    $allowComments  = trim($_POST['allow-comments'] ?? '');     // Optional created date
     
     if (empty($createdAt)) {
       $createdAt = null;
     } 
+
+    empty($allowComments) ? $allowComments = 0 : $allowComments = 1;
 
     // Process file upload for feature image
     $featureImage = null; // null
@@ -47,8 +50,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     
-    // Create post. If $slug is empty, the controller will auto-generate it.
-    $newPostId = $postController->create($userId, $title, $content, $slug, $featureImage, $description, $keywords, $createdAt, $a_script);
+    /** 
+     * Create post. If $slug is empty, the controller will auto-generate it.
+     * The public create function has the following args
+     * @param int    $userId
+     * @param string $title
+     * @param string $content
+     * @param string $slug          (optional) - if not provided, auto-generated from the title.
+     * @param string $featureImage  (optional) - defaults to null.
+     * @param string $description   (optional) - if not provided, auto-generated from content.
+     * @param string $keywords      (optional) - comma-separated keywords.
+     * @param string $createdAt     (optional) - if not provided, defaults to current timestamp.
+     * @param string $a_script      (optional)
+     * @param bool   $allowComments (optional) - whether comments are allowed (default: true).
+     * create($userId, $title, $content, $slug = null, $featureImage = null, $description = '', $keywords = '', $createdAt = null, $a_script = null, $allowComments = true)
+     */
+    $newPostId = $postController->create($userId, $title, $content, $slug, $featureImage, $description, $keywords, $createdAt, $a_script, $allowComments);
     
     if (!empty($selectedCategories) && $newPostId) {
         $postController->assignCategoriesToPost($newPostId, $selectedCategories);
@@ -84,6 +101,19 @@ $_TSCRIPTS = "<!-- TinyMCE for rich text editing -->
 
 // Set a page title for the header if desired
 $pageTitle = "My Posts - Create New Post";
+$_BSCRIPTS = "<script>
+  (function () {
+    'use strict';
+    const form = document.querySelector('.needs-validation');
+    form.addEventListener('submit', function (event) {
+      if (!form.checkValidity()) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      form.classList.add('was-validated');
+    }, false);
+  })();
+</script>";
 include APP_DIR . '/admin/header-auth.php';
 ?>
 <div class="container">
@@ -137,7 +167,12 @@ include APP_DIR . '/admin/header-auth.php';
       <label for="keywords" class="form-label">Keywords (Optional)</label>
       <input type="text" class="form-control" id="keywords" name="keywords" placeholder="Comma-separated keywords">
     </div>
-    
+    <div class="mb-3">
+      <label class="form-check-label" for="allow-comments">Allow Comments?</label>
+      <div class="form-check form-switch">
+        <input class="form-check-input" style="width:4em;height:2em;" name="allow-comments" type="checkbox" role="switch" id="allow-comments">
+      </div>
+    </div>
     <div class="mb-3">
       <label for="created_at" class="form-label">Select Date of Post (Optional)</label>
       <input type="datetime-local" id="created-at" class="form-control" name="created-at">
@@ -154,20 +189,4 @@ include APP_DIR . '/admin/header-auth.php';
     </div>
 </div>
 
-
-<!-- Bootstrap 5 JS Bundle -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-  (function () {
-    'use strict';
-    const form = document.querySelector('.needs-validation');
-    form.addEventListener('submit', function (event) {
-      if (!form.checkValidity()) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
-      form.classList.add('was-validated');
-    }, false);
-  })();
-</script>
 <?php include APP_DIR . '/admin/footer-auth.php'; ?>

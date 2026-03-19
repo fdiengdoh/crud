@@ -1,5 +1,5 @@
 <?php
-// app/admin/header-auth.php
+// app/header-auth.php
 // This header is meant for authenticated pages
 
 if (!isset($auth) || !$auth->isLoggedIn()) {
@@ -35,9 +35,21 @@ isset($_BSCRIPTS) ? $BScripts = $_BSCRIPTS : $BScripts = '';
           <li class="nav-item"><a class="nav-link text-white" href="<?= $link->getUrl('/users/post-create') ?>"><i class="bi bi-pencil-square"></i> Create Post</a></li>
           <li class="nav-item"><a class="nav-link text-white" href="<?= $link->getUrl('/users/edit-profile') ?>"><i class="bi bi-person-fill"></i> Edit Profile</a></li>
           <?php if ($auth->hasRole(\Delight\Auth\Role::ADMIN)): ?>
-            <li class="nav-item"><a class="nav-link text-white" href="<?= $link->getUrl('/admin') ?>"><i class="bi bi-hdd-stack"></i> Admin Panel</a></li>
-            <li class="nav-item"><a class="nav-link text-white" href="<?= $link->getUrl('/admin/categories') ?>"><i class="bi bi-tags"></i> Manage Categories</a></li>
-            <li class="nav-item"><a class="nav-link text-white" href="<?= $link->getUrl('/admin/view-logs') ?>"><i class="bi bi-eye"></i> view Logs</a></li>
+            <li class="nav-item dropdown">
+              <a class="nav-link text-white dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-hdd-stack"></i> Admin Panel
+              </a>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="<?= $link->getUrl('/admin') ?>"><i class="bi bi-collection-fill"></i> User/Draft Management</a></li>
+                <li><a class="dropdown-item" href="<?= $link->getUrl('/admin/categories') ?>"><i class="bi bi-tags-fill"></i> Manage Categories</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="<?= $link->getUrl('/admin/view-subscribers') ?>"><i class="bi bi-people-fill"></i> View Subscribers</a></li>
+                <li><a class="dropdown-item" href="<?= $link->getUrl('/admin/compose-newsletter') ?>"><i class="bi bi-send-fill"></i> Compose Newsletter</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="<?= $link->getUrl('/admin/view-logs') ?>"><i class="bi bi-eye-fill"></i> view Logs</a></li>
+              </ul>
+            </li>
+            
           <?php endif; ?>
           <li class="nav-item"><a class="nav-link text-white" href="<?= $link->getUrl('/') ?>" target="_blank"><i class="bi bi-browser-safari"></i> View Blog</a></li>
           <li class="nav-item"><a class="nav-link text-white" href="<?= $link->getUrl('/logout') ?>"><i class="bi bi-box-arrow-right"></i> Logout</a></li>

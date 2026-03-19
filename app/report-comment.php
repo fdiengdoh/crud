@@ -1,12 +1,12 @@
 <?php
 // app/report-comment.php
-require_once __DIR__ . '/../init.php';
+// require_once __DIR__ . '/../init.php';
 
 use App\Controllers\CommentController;
 use App\Utils\Cache;
 
 // Load cache configuration and instantiate the Cache utility.
-$config = require CACHE_DIR . '/config.php';
+$config = require CACHE_CONFIG;
 $cache = new Cache($config);
 
 $commentController = new CommentController();

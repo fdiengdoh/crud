@@ -1,7 +1,7 @@
 <?php
-// app/admin/upload-image.php
+// public/upload-image.php
 
-require_once __DIR__ . '/../../init.php';
+// require_once __DIR__ . '/../../init.php';
 
 use App\AuthConstants;
 use App\Controllers\MediaController;

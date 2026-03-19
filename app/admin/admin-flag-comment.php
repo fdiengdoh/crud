@@ -1,13 +1,13 @@
 <?php
-// app/admin/admin-flag-comment.php
-require_once __DIR__ . '/../../init.php';
+// app/flag-comment.php
+// require_once __DIR__ . '/../../init.php';
 
 use App\Controllers\CommentController;
 use App\Helpers\AuthHelper;
 use App\Utils\Cache;
 
 // Load cache configuration and instantiate the Cache utility.
-$config = require CACHE_DIR . '/config.php';
+$config = require CACHE_CONFIG;
 $cache = new Cache($config);
 
 // Ensure only admin users can access this page

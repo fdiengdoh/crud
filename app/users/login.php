@@ -1,6 +1,6 @@
 <?php
-// app/users/login.php
-require_once __DIR__ . '/../../init.php';
+// public/login.php
+// require_once __DIR__ . '/../../init.php';
 use App\Controllers\AuthController;
 
 $message = '';

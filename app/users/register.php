@@ -1,6 +1,6 @@
 <?php
-// app/users/register.php
-require_once __DIR__ . '/../../init.php';
+// public/register.php
+// require_once __DIR__ . '/../../init.php';
 
 use App\Controllers\AuthController;
 
@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username'] ?? '');
     $password = trim($_POST['password'] ?? '');
     $verificationLink = $link->getUrl('/users/verify');
-    
+
     // Call the register method from the controller
     $message = $authController->register($email, $username, $password, $verificationLink);
 }

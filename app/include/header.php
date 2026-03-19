@@ -1,8 +1,9 @@
 <?php
-// app/include/header.php common for all public pages
 // To get metada for social network
+$fb_mod = '';
 if (isset($isSinglePost) && $isSinglePost && isset($post)) {
     // For single post pages
+    $fb_mod = '<meta property="fb:admins" content="10232125121088977" />';
     $ogTitle = htmlspecialchars($post['title'] ?? ' ', ENT_QUOTES, 'UTF-8');    // Use a truncated version of the post content for description
     $ogDescription = htmlspecialchars(substr(strip_tags($post['content']), 0, 150));
     if(!empty($post['feature_image']) ) {
@@ -39,14 +40,14 @@ if (isset($isSinglePost) && $isSinglePost && isset($post)) {
       <meta name="twitter:title" content="<?= $ogTitle ?>">
       <meta name="twitter:description" content="<?= $ogDescription ?>">
       <meta name="twitter:image" content="<?= $ogImage ?>">
-
+      <?= $fb_mod ?? '' ?>
       <title><?= $title ?></title>
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
       <link rel="preconnect" href="https://cdn.jsdelivr.net">
       <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
       <link rel="preload" href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Imperial+Script&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
-      <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" as="style" onload="this.onload=null;this.rel='stylesheet'">
+      <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" as="style" onload="this.onload=null;this.rel='stylesheet'">
       <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
       <!-- Custom styles for this template -->
       <link rel="preload" href="/css/style.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
