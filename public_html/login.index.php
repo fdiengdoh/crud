@@ -50,7 +50,9 @@ $link->routes = [
 // Get the PostController instances (needed for database calls)
 $postController = new PostController();
 
-$requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+// Get the current URL path and clean it once
+$uri = preg_replace('#/+#', '/', $_SERVER['REQUEST_URI'] ?? ''); // Remove duplicate slashes for consistency
+$requestUri = parse_url($uri, PHP_URL_PATH) ?? ''; // Ensure $requestUri is a string, default to empty if null
 $requestUri = rtrim($requestUri, '/');
 if ($requestUri === '/logout') {
     $authController = new AuthController();
