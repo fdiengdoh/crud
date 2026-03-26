@@ -7,6 +7,7 @@ use App\Controllers\MediaController;
 use App\Controllers\CategoryController;
 use Delight\Auth\Auth;
 use App\Utils\Cache;
+use App\Helpers\CsrfHelper;
 
 // Load cache configuration and instantiate the Cache utility.
 $config = require (CACHE_CONFIG);
@@ -48,6 +49,17 @@ $assignedCategoryIds = array_map(function($cat) { return $cat['id']; }, $assigne
 $allCategories = $categoryController->getAllCategories();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // 1. THE SECURITY GATE: Validate the token before doing anything else
+    $token = $_POST['csrf_token'] ?? '';
+    
+    if (!CsrfHelper::isValid($token)) {
+        // Halt execution and show an error (or log it)
+        header('HTTP/1.1 403 Forbidden');
+        $message = "Security Error: Invalid or expired session token. Please refresh the page.";
+        // Stop the script here so no files are uploaded and no DB records are created
+        exit($message); 
+    }
+
     $title         = trim($_POST['title'] ?? '');
     $content       = trim($_POST['content'] ?? '');
     $a_script      = trim($_POST['a_script'] ?? '');      // Optional additional scripts
@@ -151,6 +163,7 @@ include APP_DIR . '/admin/header-auth.php';
   <?php endif; ?>
   <h1>Edit Post</h1>
   <form method="post" action="" class="needs-validation" novalidate enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
     <div class="mb-3">
       <label for="title" class="form-label">Title</label>
       <input type="text" class="form-control" id="title" name="title" value="<?php echo htmlspecialchars($post['title'] ?? ' ', ENT_QUOTES, 'UTF-8'); ?>" required>

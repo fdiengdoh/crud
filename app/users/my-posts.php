@@ -5,6 +5,7 @@ use App\Controllers\PostController;
 use App\Controllers\CategoryController;
 use App\Controllers\ProfileController;
 use Delight\Auth\Role;
+use App\Helpers\CsrfHelper;
 
 $userId = $auth->getUserId();
 $profile = new ProfileController();
