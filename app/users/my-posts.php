@@ -1,6 +1,5 @@
 <?php
 // app/my-posts.php
-// require_once __DIR__ . '/../../init.php';
 
 use App\Controllers\PostController;
 use App\Controllers\CategoryController;
@@ -44,42 +43,56 @@ $message = $_GET['msg'] ?? '';
     <a href="/users?category=<?= $category['id'] ?>" class="btn btn-info btn-small p-2"><?= $category['name'] ?></a>
     <?php endforeach; ?>
     </p>
-    <?php if (count($userPosts) > 0): ?>
-        <?php foreach ($userPosts as $post): ?>
-        <div class="row">
-            <div class="card p-0 mb-2">
-                <div class="row g-0">
-                    <div class="col-md-2">
-                        <img src="<?= htmlspecialchars($post['feature_image'] ?? ' ', ENT_QUOTES, 'UTF-8'); ?>" class="rounded-start" height="125" width="100%" style="object-fit: cover;width:100%; height:100%" alt="<?= htmlspecialchars($post['title'] ?? ' ', ENT_QUOTES, 'UTF-8'); ?>">
+<?php if (count($userPosts) > 0): ?>
+    <?php foreach ($userPosts as $post): ?>
+    <div class="row">
+        <div class="card p-0 mb-2 shadow-sm">
+            <div class="row g-0">
+                <div class="col-md-2">
+                    <img src="<?= htmlspecialchars($post['feature_image'] ?? ' ', ENT_QUOTES, 'UTF-8'); ?>" class="rounded-start" style="object-fit: cover; width:100%; height:125px;" alt="<?= htmlspecialchars($post['title'] ?? ' ', ENT_QUOTES, 'UTF-8'); ?>">
+                </div>
+                <div class="col-md-7 z-10 bg-light">
+                    <div class="card-body">
+                        <?php $class = ($post['status'] === 'published') ? "success" : "warning"; ?>
+                        <h5 class="card-title">
+                            <?= htmlspecialchars($post['title'] ?? ' ', ENT_QUOTES, 'UTF-8'); ?> 
+                            <small class="badge text-bg-<?= $class ?>"><?= htmlspecialchars($post['status'], ENT_QUOTES, 'UTF-8') ?></small>
+                        </h5>
+                        <p class="card-text small text-muted"><?= htmlspecialchars($post['excerpt'] ?? ' ', ENT_QUOTES, 'UTF-8'); ?></p>
                     </div>
-                    <div class="col-md-7 z-10 bg-light">
-                        <div class="card-body">
-                            <?php ($post['status'] === 'published') ? $class = "success" : $class = "warning"; ?>
-                            <h5 class="card-title"><?= htmlspecialchars($post['title'] ?? ' ', ENT_QUOTES, 'UTF-8'); ?> <small class="badge text-bg-<?= $class ?>"><?= $post['status'] ?></small></h5>
-                            <p class="card-text"><?= htmlspecialchars($post['excerpt'] ?? ' ', ENT_QUOTES, 'UTF-8'); ?></p>
-                                
+                </div>
+                    
+                <div class="col-md-3 bg-light border-start">
+                    <div class="card-body">
+                        <div class="d-flex flex-wrap gap-1 mb-2">
+                            <a href="<?= $link->getUrl('/users/post-edit') ?>/?id=<?= $post['id']; ?>" class="btn btn-warning btn-sm" title="Edit Post">
+                                <i class="bi bi-vector-pen"></i> Edit
+                            </a>
+
+                            <form action="<?= $link->getUrl('/users/post-delete') ?>" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to move this post to draft?');">
+                                <input type="hidden" name="id" value="<?= $post['id']; ?>">
+                                <input type="hidden" name="csrf_token" value="<?= $csrfToken; ?>">
+                                <button type="submit" class="btn btn-danger btn-sm" title="Move to Draft">
+                                    <i class="bi bi-backspace-reverse-fill"></i> Draft
+                                </button>
+                            </form>
+
+                            <a href="<?= LOGIN_URL . '/' . htmlspecialchars($post['slug'] ?? ' ', ENT_QUOTES, 'UTF-8'); ?>" target="_blank" class="btn btn-primary btn-sm">
+                                <i class="bi bi-browser-safari"></i> View
+                            </a>
                         </div>
-                    </div>
-                        
-                    <div class="col-md-3 bg-light">
-                        <div class="card-body">
-                            <p class="card-text">
-                                <a href="<?= $link->getUrl('/users/post-edit') ?>/?id=<?php echo $post['id']; ?>" class="btn btn-warning btn-sm" title="Edit Post"><i class="bi bi-vector-pen"></i> Edit</a>
-                                <a href="<?= $link->getUrl('/users/post-delete') ?>/?id=<?php echo $post['id']; ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to move this post to draft?');"><i class="bi bi-backspace-reverse-fill"></i> Draft</a>
-                                <a href="<?= LOGIN_URL . '/' . htmlspecialchars($post['slug'] ?? ' ', ENT_QUOTES, 'UTF-8'); ?>" target="_blank" class="btn btn-primary btn-sm"><i class="bi bi-browser-safari"></i> View</a>
-                            </p>
-                            <p class="card-text">
-                                <span class="text-primary"><i class="bi bi-calendar-check-fill"></i> <?= date('d M Y', strtotime($post['created_at'])) ?></span>
-                                <span class="text-info"><i class="bi bi-bar-chart-line"></i> <?= $post['views'] ?></span>
-                            </p>
-                        </div>
+                        <p class="card-text mb-0">
+                            <small class="text-primary me-2"><i class="bi bi-calendar-check-fill"></i> <?= date('d M Y', strtotime($post['created_at'])) ?></small>
+                            <small class="text-info"><i class="bi bi-bar-chart-line"></i> <?= (int)$post['views'] ?></small>
+                        </p>
                     </div>
                 </div>
             </div>
         </div>
-      <?php endforeach; ?>
+    </div>
+    <?php endforeach; ?>
     <?php else: ?>
-      <p>You have not created any posts yet.</p>
+        <div class="alert alert-info">You have not created any posts yet.</div>
     <?php endif; ?>
   </div>
 <!-- Your page content goes here -->
