@@ -1,11 +1,11 @@
 <?php
 // app/admin/post-crate.php
-// require_once __DIR__ . '/../../init.php';
 
 use App\Controllers\PostController;
 use App\Controllers\CategoryController;
 use App\Controllers\MediaController;
 use Delight\Auth\Role;
+use App\Helpers\CsrfHelper;
 
 // Only Authors (or higher) can create posts.
 if ($auth->hasRole(Role::SUBSCRIBER)) {
@@ -23,6 +23,17 @@ $message = '';
 $allCategories = $categoryController->getAllCategories();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // 1. THE SECURITY GATE: Validate the token before doing anything else
+    $token = $_POST['csrf_token'] ?? '';
+    
+    if (!CsrfHelper::isValid($token)) {
+        // Halt execution and show an error (or log it)
+        header('HTTP/1.1 403 Forbidden');
+        $message = "Security Error: Invalid or expired session token. Please refresh the page.";
+        // Stop the script here so no files are uploaded and no DB records are created
+        exit($message); 
+    }
+
     $title         = trim($_POST['title'] ?? '');
     $content       = trim($_POST['content'] ?? '');
     $slug          = trim($_POST['slug'] ?? '');         // Optional custom slug
@@ -122,6 +133,7 @@ include APP_DIR . '/admin/header-auth.php';
   <?php endif; ?>
   <h1>Create New Post</h1>
   <form method="post" action="" class="needs-validation" enctype="multipart/form-data" novalidate>
+    <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
     <div class="mb-3">
       <label for="title" class="form-label">Title</label>
       <input type="text" class="form-control" id="title" name="title" placeholder="Post title" required>
