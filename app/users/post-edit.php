@@ -119,39 +119,63 @@ $_TSCRIPTS = "<!-- TinyMCE for rich text editing -->
   <script src=\"" . LOGIN_URL . "/js/vendor/tinymce/tinymce.min.js\" referrerpolicy=\"origin\"></script>
   <script>
     tinymce.init({
-      selector: '#content',
-      license_key: 'gpl',
-      plugins: 'lists image link code codesample charmap',
-      toolbar: 'undo redo | bold italic underline subscript superscript | charmap | bullist numlist | link image codesample | code',
-      codesample_languages: [
+    selector: '#content',
+    license_key: 'gpl',
+    plugins: 'lists image link code codesample',
+    toolbar: 'undo redo | bold italic underline | bullist numlist | link image codesample | code',
+    codesample_languages: [
         { text: 'HTML', value: 'html' },
         { text: 'JavaScript', value: 'javascript' },
         { text: 'CSS', value: 'css' },
         { text: 'PHP', value: 'php' }
-        // Add more languages as needed
-      ],
-      convert_urls : false,
-      automatic_uploads: true,
-      extended_valid_elements: 'i[class],span[class]',
-      images_upload_url: '" . LOGIN_URL . "/admin/upload-image',
-      images_file_types: 'jpg,svg,webp,png,gif,bmp',
-      sandbox_iframes: false,
+    ],
+    convert_urls: false,
+    automatic_uploads: true,
+    extended_valid_elements: 'i[class],span[class]',
+    images_file_types: 'jpg,svg,webp,png,gif,bmp',
+    sandbox_iframes: false,
+
+    /* CUSTOM UPLOAD HANDLER FOR CSRF */
+    images_upload_handler: (blobInfo, progress) => new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.withCredentials = false;
+        xhr.open('POST', '" . LOGIN_URL . "/admin/upload-image');
+
+        xhr.upload.onprogress = (e) => {
+            progress(e.loaded / e.total * 100);
+        };
+
+        xhr.onload = () => {
+            if (xhr.status < 200 || xhr.status >= 300) {
+                reject('HTTP Error: ' + xhr.status);
+                return;
+            }
+
+            const json = JSON.parse(xhr.responseText);
+
+            if (!json || typeof json.location != 'string') {
+                reject('Invalid JSON: ' + (json.error || xhr.responseText));
+                return;
+            }
+
+            // In Promise-style, we use resolve() instead of success()
+            resolve(json.location);
+        };
+
+        xhr.onerror = () => {
+            reject('Image upload failed due to a network error.');
+        };
+
+        const formData = new FormData();
+        formData.append('file', blobInfo.blob(), blobInfo.filename());
+        
+        // Injecting your CSRF token
+        formData.append('csrf_token', '" . $csrfToken . "');
+
+        xhr.send(formData);
+      })
     });
   </script>";
-
-  $_BSCRIPTS = "<script>
-  (function () {
-    'use strict';
-    const form = document.querySelector('.needs-validation');
-    form.addEventListener('submit', function (event) {
-      if (!form.checkValidity()) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
-      form.classList.add('was-validated');
-    }, false);
-  })();
-</script>";
 
 // Set a page title for the header if desired
 $pageTitle = "My Posts - Edit Post";
