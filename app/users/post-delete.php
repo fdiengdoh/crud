@@ -1,8 +1,9 @@
 <?php
 // public/post-delete.php
-// require_once __DIR__ . '/../../init.php';
+
 use App\Controllers\PostController;
 use App\Utils\Cache;
+use App\Helpers\CsrfHelper;
 
 // Load cache configuration and instantiate the Cache utility.
 $config = require (CACHE_CONFIG);
@@ -14,11 +15,17 @@ if (!$auth->isLoggedIn()) {
     exit;
 }
 
+// CSRF Validation (Crucial change)
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !CsrfHelper::isValid($_POST['csrf_token'] ?? '')) {
+    header("Location: " . $link->getUrl('/users') . "/?msg=Security validation failed");
+    exit;
+}
+
 $userId = $auth->getUserId();
 $postController = new PostController();
 
 // Get the post ID from the query string
-$postId = $_GET['id'] ?? null;
+$postId = $_POST['id'] ?? null;
 if (!$postId) {
     header("Location: " . $link->getUrl('/users') . "/?msg=Post ID not provided");
     exit;
@@ -31,9 +38,7 @@ if (!$post || $post['user_id'] != $userId) {
     exit;
 }
 $cache->clearCache('/' . $post['slug']);
-// Instead of deleting the post, update its status to 'draft'
-$stmt = $pdo->prepare("UPDATE posts SET status = 'draft', updated_at = NOW() WHERE id = ?");
-$result = $stmt->execute([$postId]);
+$result = $postController->delete($postId);
 
 if ($result) {
     header("Location: " . $link->getUrl('/users') . "/?msg=Post moved to draft successfully");
