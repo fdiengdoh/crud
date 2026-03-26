@@ -92,118 +92,105 @@
       <script rel="preload" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous" as="script"></script>
       <?= $BScripts ?>
       <script>
-         //Subscription Script
-      let subBtn = document.getElementById("subscribe");
-      subBtn.addEventListener('click', function(event) {
-         // Prevent default form submission if it were a submit button inside a form
-         // Although our button is type="button", it's good practice for forms.
-         event.preventDefault();
+         // Subscription Script with CSRF Protection
+         let subBtn = document.getElementById("subscribe");
+         subBtn.addEventListener('click', function(event) {
+            event.preventDefault();
 
-         let full_name_input = document.getElementById("sub_full_name");
-         let email_input = document.getElementById("sub_email");
-         let notify_element = document.getElementById("notify");
+            let full_name_input = document.getElementById("sub_full_name");
+            let email_input = document.getElementById("sub_email");
+            let notify_element = document.getElementById("notify");
 
-         let full_name = full_name_input.value.trim();
-         let email = email_input.value.trim();
+            let full_name = full_name_input.value.trim();
+            let email = email_input.value.trim();
 
-         let isValid = true; // Flag to track overall form validity
+            let isValid = true; 
 
-         // --- Reset previous validation states ---
-         full_name_input.classList.remove('is-invalid', 'is-valid');
-         email_input.classList.remove('is-invalid', 'is-valid');
-         notify_element.innerHTML = ''; // Clear general notification
-         notify_element.classList.remove('text-success', 'text-danger'); // Remove color classes
+            // --- Reset previous validation states ---
+            full_name_input.classList.remove('is-invalid', 'is-valid');
+            email_input.classList.remove('is-invalid', 'is-valid');
+            notify_element.innerHTML = '';
+            notify_element.classList.remove('text-success', 'text-danger');
 
-         // --- Input Validation ---
+            // --- Input Validation ---
+            if (full_name === "" || full_name.length < 3) {
+               full_name_input.classList.add('is-invalid');
+               isValid = false;
+            } else {
+               full_name_input.classList.add('is-valid');
+            }
 
-         // 1. Validate Full Name
-         if (full_name === "") {
-            full_name_input.classList.add('is-invalid');
-            isValid = false;
-         } else if (full_name.length < 3) {
-            full_name_input.classList.add('is-invalid');
-            isValid = false;
-         } else {
-            full_name_input.classList.add('is-valid'); // Mark as valid if checks pass
-         }
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (email === "" || !emailRegex.test(email)) {
+               email_input.classList.add('is-invalid');
+               isValid = false;
+            } else {
+               email_input.classList.add('is-valid');
+            }
 
-         // 2. Validate Email
-         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-         if (email === "") {
-            email_input.classList.add('is-invalid');
-            emailFeedback.textContent = "Email cannot be empty.";
-            isValid = false;
-         } else if (!emailRegex.test(email)) {
-            email_input.classList.add('is-invalid');
-            emailFeedback.textContent = "Please enter a valid email address.";
-            isValid = false;
-         } else {
-            email_input.classList.add('is-valid'); // Mark as valid if checks pass
-         }
+            if (!isValid) {
+               notify_element.innerHTML = "Please fix the errors in the form.";
+               notify_element.classList.add('text-danger');
+               return;
+            }
 
-         // --- If any validation failed, stop here ---
-         if (!isValid) {
-            notify_element.innerHTML = "Please fix the errors in the form.";
-            notify_element.classList.add('text-danger'); // Bootstrap class for red text
-            return;
-         }
+            // --- Prepare POST Data ---
+            const formData = new FormData();
+            formData.append('subscribe', 'true');
+            formData.append('email', email);
+            formData.append('full_name', full_name);
+            
+            // INJECT THE CSRF TOKEN HERE
+            formData.append('csrf_token', '<?= $csrfToken ?>');
 
-         // --- If all validations pass, proceed with AJAX ---
-         // Using URLSearchParams for proper encoding
-         const params = new URLSearchParams();
-         params.append('subscribe', 'true');
-         params.append('email', email);
-         params.append('full_name', full_name);
+            notify_element.innerHTML = "Subscribing...";
+            notify_element.style.color = "blue";
 
-         // Show a loading message
-         notify_element.innerHTML = "Subscribing...";
-         notify_element.classList.remove('text-success', 'text-danger'); // Ensure no old colors
-         notify_element.style.color = "blue"; // Optional: blue for loading (Bootstrap doesn't have a specific loading color class)
-
-
-         fetch(`<?= BASE_URL ?>/ajax-handler?${params.toString()}`)
+            // --- Fetch using POST ---
+            fetch(`<?= BASE_URL ?>/ajax-handler`, {
+               method: 'POST', // Changed from GET to POST
+               body: formData
+            })
             .then(response => {
-                  if (!response.ok) {
+               if (!response.ok) {
                      throw new Error(`HTTP error! status: ${response.status}`);
-                  }
-                  return response.json();
+               }
+               return response.json();
             })
             .then(data => {
-                  if (data.success) {
+               if (data.success) {
                      notify_element.innerHTML = data.message || "Subscribed Successfully!";
-                     notify_element.classList.remove('text-danger');
-                     notify_element.classList.add('text-success'); // Bootstrap class for green text
-                     // Clear input fields and validation states on success
+                     notify_element.classList.add('text-success');
+                     // Clear fields
                      full_name_input.value = "";
                      email_input.value = "";
                      full_name_input.classList.remove('is-valid');
                      email_input.classList.remove('is-valid');
-                  } else {
+               } else {
                      notify_element.innerHTML = data.message || "Error in subscribing";
-                     notify_element.classList.remove('text-success');
                      notify_element.classList.add('text-danger');
-                  }
+               }
             })
             .catch(error => {
-                  console.error('There was a problem with the fetch operation:', error);
-                  notify_element.innerHTML = "Network or server error. Please try again later.";
-                  notify_element.classList.remove('text-success');
-                  notify_element.classList.add('text-danger');
+               console.error('Fetch error:', error);
+               notify_element.innerHTML = "Network error. Please try again.";
+               notify_element.classList.add('text-danger');
             });
-      });
+         });
+
          // Show/hide the button based on window scroll position
-        window.addEventListener('scroll', function () {
-          if (window.scrollY > 100) {
-            document.getElementById('backToTop').style.display = 'block';
-          } else {
-            document.getElementById('backToTop').style.display = 'none';
-          }
-        });
-        
-        // Smooth scroll back to top when the button is clicked
-        document.getElementById('backToTop').addEventListener('click', function () {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
+         window.addEventListener('scroll', function () {
+            if (window.scrollY > 100) {
+               document.getElementById('backToTop').style.display = 'block';
+            } else {
+               document.getElementById('backToTop').style.display = 'none';
+            }
+         });
+         
+         // Smooth scroll back to top when the button is clicked
+         document.getElementById('backToTop').addEventListener('click', function () {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+         });
       </script>
    </body>
 </html>
