@@ -214,8 +214,4 @@ class SubscribersController{
         $stmt->execute();
         return $stmt->fetchAll();
     }
-
-    public function test(){
-        echo $this->subscribe("fdiengdoh@fdiengdoh.com","Farlando Diengdoh");
-    }
 }
