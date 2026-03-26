@@ -50,63 +50,88 @@ $link->routes = [
 // Get the PostController instances (needed for database calls)
 $postController = new PostController();
 
-// Get the current URL path and clean it once
-$uri = preg_replace('#/+#', '/', $_SERVER['REQUEST_URI'] ?? ''); // Remove duplicate slashes for consistency
-$requestUri = parse_url($uri, PHP_URL_PATH) ?? ''; // Ensure $requestUri is a string, default to empty if null
+$TScripts = ''; // additional top scripts
+$BScripts = ''; // additional bottom scripts
+$recentPosts = $postController->getRecentPosts(RECENT_POST); //Get recent posts for sidebar
+$popularPosts = $postController->getPopularPosts(POPULAR_POST); //Get popular posts for sidebar
+
+$requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $requestUri = rtrim($requestUri, '/');
+
+// 1. Handle Logout first
 if ($requestUri === '/logout') {
-    $authController = new AuthController();
-    $authController->logout();
+    (new AuthController())->logout();
     header("Location: " . $link->getUrl('/users/login'));
     exit;
-}elseif (isset($auth) && $auth->isLoggedIn()) {
-    $TScripts = ''; // additional top scripts
-    $BScripts = ''; // additional bottom scripts
-    $recentPosts = $postController->getRecentPosts(RECENT_POST); //Get recent posts for sidebar
-    $popularPosts = $postController->getPopularPosts(POPULAR_POST); //Get popular posts for sidebar
-    
-    if($requestUri === ''){
+}
+
+$isLoggedIn = (isset($auth) && $auth->isLoggedIn());
+
+// 2. ROOT DOMAIN LOGIC (login.fdiengdoh.com/)
+if ($requestUri === '' || $requestUri === '/') {
+    if ($isLoggedIn) {
+        header("Location: " . $link->getUrl('/users')); 
+    } else {
+        require APP_DIR . '/users/login.php'; 
+    }
+    exit;
+}
+
+// 3. Define Publicly Accessible Routes
+$publicRoutes = [
+    '/users/login',
+    '/users/register',
+    '/users/forgot-password',
+    '/users/reset-password',
+    '/users/verify',
+    '/ajax-handler',
+    '/subscriber',
+    '/report-comment'
+];
+
+// 4. ROUTING LOGIC (Static Routes)
+if (array_key_exists($requestUri, $link->routes)) {
+    // Redirect logged-in users away from login/register
+    if ($isLoggedIn && ($requestUri === '/users/login' || $requestUri === '/users/register')) {
         header("Location: " . $link->getUrl('/users'));
         exit;
     }
-    // Handle static routes using the Link helper
-    if (array_key_exists($requestUri, $link->routes)) {
-        // Special case: if request is '/login' and user is logged in, redirect to /my-posts.
-        if ($requestUri === '/users/login' && isset($auth) && $auth->isLoggedIn()) {
-            header("Location: " . $link->getUrl('/users'));
-            exit;
-        }
-        require $link->getFile($requestUri);
-        exit;
-    }
-    
-    // Handle dynamic routes
-    if (strpos($requestUri, '/profile/') === 0) {
-        // Public profile pages, e.g. /profile/username
-        $username = substr($requestUri, strlen('/profile/'));
-        $_GET['username'] = $username;
-        require APP_DIR . '/users/profile.php';
-        exit;
-    } elseif ($requestUri === '/profile') {
-        // If exactly /profile, redirect logged-in user to their own profile, else redirect to login.
-        if ($auth->isLoggedIn()) {
-            $username = $auth->getUsername() ?? '';
-            if (!empty($username)) {
-                header("Location: " . BASE_URL . "/profile/" . urlencode($username));
-                exit;
-            }
-        }
+
+    // Auth Check for Private Routes (Admin/User area)
+    if (!in_array($requestUri, $publicRoutes) && !$isLoggedIn) {
         header("Location: " . $link->getUrl('/users/login'));
         exit;
-    }else {
-        // Assume the request is for a blog post (pretty URL handling)
-        $_GET['slug'] = ltrim($requestUri, '/');
+    }
+
+    $file = $link->getFile($requestUri);
+    if ($file) {
+        require $file;
+        exit;
+    }
+}
+
+// 5. Handle Dynamic Profiles
+if (strpos($requestUri, '/profile/') === 0) {
+    $_GET['username'] = substr($requestUri, strlen('/profile/'));
+    require APP_DIR . '/users/profile.php';
+    exit;
+}
+
+// 6. Handle Fallback (Blog Post Slugs)
+if ($requestUri !== '') {
+    $slug = ltrim($requestUri, '/');
+    $postController = new PostController();
+    
+    // VALIDATION: Only require single-post if the slug exists in DB
+    // This prevents "extra" URLs from loading a broken page
+    if ($postController->show($slug)) { 
+        $_GET['slug'] = $slug;
         require APP_DIR . '/single-post.php';
         exit;
     }
-}elseif($requestUri === '/users/login' || $requestUri  === ''){
-    require $link->getFile('/users/login');
-    exit;
-}else{
-    header("Location: " . BASE_URL );
 }
+
+// 7. FINAL SAFETY NET: REDIRECT TO MAIN DOMAIN
+// If it's not a route, not a profile, and not a valid post slug:
+header("Location: " . BASE_URL);
+exit();
