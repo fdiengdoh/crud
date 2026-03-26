@@ -17,7 +17,6 @@ use App\Controllers\PostController;
 use App\Controllers\CategoryController;
 
 // Instantiate the Link helper and define routes.
-// The 'url' key is essential for your Link helper's getUrl() method.
 $link = new Link();
 $link->routes = [
     ''                          => ['url' => BASE_URL . '/', 'file' => APP_DIR . '/home.php', 'cache' => true],
@@ -29,7 +28,7 @@ $link->routes = [
     '/subscriber'               => ['url' => BASE_URL . '/subscriber', 'file' => APP_DIR . '/subscriber.php', 'cache' => false],
     '/sitemap.xml'              => ['url' => BASE_URL  . '/sitemap.xml', 'file' => APP_DIR . '/sitemap.php', 'cache' => true],
 
-    // Add other static public routes here if any
+    // Add other static public routes here if needed, see sample login.index.php file
 ];
 
 // --- CRITICAL OPTIMIZATION: CACHE SLUGS FROM THE DATABASE ---
