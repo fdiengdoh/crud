@@ -7,9 +7,11 @@ header('Content-type: text/html; charset=utf-8');
 //header("Access-Control-Allow-Origin: https://example.com");
 require_once '/../init.php';  // Global initialization
 
-use App\Controllers\AuthController;
-//Add routes
-use App\Helpers\Link;
+use App\Controllers\AuthController; // Import AuthController for handling logout and authentication checks
+use App\Helpers\Link; // Import Link helper for routing
+use App\Controllers\PostController; // Import PostController for fetching recent and popular posts
+
+// Get link ready for routing
 $link = new Link();
 
 $link->routes = [
@@ -45,6 +47,9 @@ $link->routes = [
     '/sitemap.html'             => ['url' => BASE_URL  . '/sitemap.html', 'file' => APP_DIR . '/sitemap.php'],
 ];
 
+// Get the PostController instances (needed for database calls)
+$postController = new PostController();
+
 $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $requestUri = rtrim($requestUri, '/');
 if ($requestUri === '/logout') {
@@ -55,6 +60,8 @@ if ($requestUri === '/logout') {
 }elseif (isset($auth) && $auth->isLoggedIn()) {
     $TScripts = ''; // additional top scripts
     $BScripts = ''; // additional bottom scripts
+    $recentPosts = $postController->getRecentPosts(RECENT_POST); //Get recent posts for sidebar
+    $popularPosts = $postController->getPopularPosts(POPULAR_POST); //Get popular posts for sidebar
     
     if($requestUri === ''){
         header("Location: " . $link->getUrl('/users'));
