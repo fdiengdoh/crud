@@ -90,11 +90,16 @@ define('HOME_CATEGORIES', explode(",", HOME_POST));
 date_default_timezone_set('Asia/Kolkata');
 
 // Initialize common objects
-
+// Database connection and Auth instance are now available globally.
 use App\Database;
 $pdo = Database::getConnection();
 
+// Initialize the Auth instance using the same PDO connection
 use Delight\Auth\Auth;
 $auth = new Auth($pdo);
 
-// Now, $pdo, $auth, and all .env variables (as constants) are available globally.
+// Initialize CSRF token and make it available globally
+use App\Helpers\CsrfHelper;
+$csrfToken = CsrfHelper::getToken();
+
+// Now, $pdo, $auth, $csrfToken and all .env variables (as constants) are available globally.
