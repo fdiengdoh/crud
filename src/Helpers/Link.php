@@ -94,12 +94,33 @@ class Link {
     }
 
     /**
-     * Retrieve the file path for a given route key.
+     * Retrieve the file path for a given route key with strict security validation.
      *
      * @param string $key The route key (e.g., '/login')
      * @return string|null
      */
     public function getFile(string $key): ?string {
-        return $this->routes[$key]['file'] ?? null;
+        // Check if the key even exists in our defined routes
+        if (!isset($this->routes[$key]['file'])) {
+            return null;
+        }
+
+        $requestedFile = $this->routes[$key]['file'];
+
+        // Canonicalize the paths
+        $realAppDir = realpath(APP_DIR);
+        $realRequestedFile = realpath($requestedFile);
+
+        // Validation Logic
+        if ($realRequestedFile && $realAppDir) {
+            // Check if the requested file actually resides inside APP_DIR
+            if (str_starts_with($realRequestedFile, $realAppDir)) {
+                return $requestedFile;
+            }
+        }
+
+        // If the path is outside APP_DIR or doesn't exist, log a security warning
+        error_log("Security Warning: Attempted access to file outside APP_DIR: " . $requestedFile);
+        return null;
     }
 }
