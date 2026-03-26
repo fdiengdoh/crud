@@ -1,12 +1,12 @@
-<?php
-// public/upload-image.php
 
-// require_once __DIR__ . '/../../init.php';
+<?php
+// admin/upload-image.php
 
 use App\AuthConstants;
 use App\Controllers\MediaController;
+use App\Helpers\CsrfHelper; // Import the Helper
 
-// Allow access only if the user is logged in and is either an Author or Admin
+// 1. Authorization Check
 if (
     !$auth->isLoggedIn() ||
     (
@@ -15,20 +15,33 @@ if (
     )
 ) {
     http_response_code(403);
+    header('Content-Type: application/json');
     echo json_encode(['error' => 'Unauthorized access.']);
     exit;
 }
 
+// 2. CSRF Validation (Crucial for API endpoints)
+// We check $_POST['csrf_token'] which TinyMCE will send.
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!CsrfHelper::isValid($_POST['csrf_token'] ?? '')) {
+        http_response_code(403);
+        header('Content-Type: application/json');
+        echo json_encode(['error' => 'CSRF token validation failed.']);
+        exit;
+    }
+}
 
-// Process file upload
+// 3. Process file upload
 if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
-    // Check file size (limit to 5MB for example)
-    $maxFileSize = 8 * 1024 * 1024; // 2MB in bytes
+    // Check file size (limit to 8MB)
+    $maxFileSize = 8 * 1024 * 1024; 
     if ($_FILES['file']['size'] > $maxFileSize) {
         http_response_code(400);
+        header('Content-Type: application/json');
         echo json_encode(['error' => 'File size exceeds limit (8MB).']);
         exit;
     }
+
     $uploader = new MediaController();
     $uploadedPath = $uploader->handleUpload($_FILES['file']);
 
@@ -42,7 +55,12 @@ if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
         ]);
     } else {
         http_response_code(400);
-        echo json_encode(['error' => 'No file uploaded or an error occurred.']);
+        echo json_encode(['error' => 'The file could not be saved to the server.']);
     }
+    exit;
+} else {
+    http_response_code(400);
+    header('Content-Type: application/json');
+    echo json_encode(['error' => 'No file was received by the server.']);
     exit;
 }
