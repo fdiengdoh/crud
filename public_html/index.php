@@ -176,8 +176,9 @@ $TScripts = ''; // additional top scripts
 $BScripts = ''; // additional bottom scripts
 
 // Get the current URL path and clean it once
-$requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-// Remove trailing slash, unless it's the root '/'
+$uri = preg_replace('#/+#', '/', $_SERVER['REQUEST_URI'] ?? ''); // Remove duplicate slashes for consistency
+$requestUri = parse_url($uri, PHP_URL_PATH) ?? ''; // Ensure $requestUri is a string, default to empty if null
+
 if ($requestUri !== '/') {
     $requestUri = rtrim($requestUri, '/');
 }
