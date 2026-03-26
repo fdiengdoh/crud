@@ -190,86 +190,91 @@ try {
 
     // --- Handle Form Submission (POST request) ---
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['send_newsletter'])) {
-        $subject = trim($_POST['subject'] ?? '');
-        $body = trim($_POST['body'] ?? ''); // This holds raw HTML from TinyMCE
-        $selectedSubscriberEmails = $_POST['selected_subscribers'] ?? []; // Array of selected emails
+      // CSRF Check: Validate the token before processing the email blast
+      if (!\App\Helpers\CsrfHelper::isValid($_POST['csrf_token'] ?? '')) {
+          $errorMessage = 'Security token expired. Please refresh the page and try again.';
+      } else{
+          $subject = trim($_POST['subject'] ?? '');
+          $body = trim($_POST['body'] ?? ''); // This holds raw HTML from TinyMCE
+          $selectedSubscriberEmails = $_POST['selected_subscribers'] ?? []; // Array of selected emails
 
-        // Basic server-side validation for form input
-        if (empty($subject)) {
-            $errorMessage = 'Email subject cannot be empty.';
-        } elseif (empty($body)) {
-            $errorMessage = 'Email body cannot be empty.';
-        } elseif (empty($selectedSubscriberEmails)) {
-            $errorMessage = 'Please select at least one subscriber to send the newsletter.';
-        } else {
-            $mailer = new Mailer();
-            $emailsSent = 0;
-            $emailsFailed = 0;
-            $subscribersToSendTo = [];
+          // Basic server-side validation for form input
+          if (empty($subject)) {
+              $errorMessage = 'Email subject cannot be empty.';
+          } elseif (empty($body)) {
+              $errorMessage = 'Email body cannot be empty.';
+          } elseif (empty($selectedSubscriberEmails)) {
+              $errorMessage = 'Please select at least one subscriber to send the newsletter.';
+          } else {
+              $mailer = new Mailer();
+              $emailsSent = 0;
+              $emailsFailed = 0;
+              $subscribersToSendTo = [];
 
-            // Build the list of actual subscriber objects from the selected emails
-            foreach ($allSubscribers as $subscriber) {
-                // Ensure the selected email actually corresponds to a valid subscriber in your DB.
-                // This prevents injecting arbitrary emails.
-                if (in_array($subscriber['email'], $selectedSubscriberEmails)) {
-                    // You might want to ONLY send to verified subscribers even if they are selected.
-                    // Add a check here: if ($subscriber['is_verified']) { ... }
-                    $subscribersToSendTo[] = $subscriber;
-                }
-            }
+              // Build the list of actual subscriber objects from the selected emails
+              foreach ($allSubscribers as $subscriber) {
+                  // Ensure the selected email actually corresponds to a valid subscriber in your DB.
+                  // This prevents injecting arbitrary emails.
+                  if (in_array($subscriber['email'], $selectedSubscriberEmails)) {
+                      // You might want to ONLY send to verified subscribers even if they are selected.
+                      // Add a check here: if ($subscriber['is_verified']) { ... }
+                      $subscribersToSendTo[] = $subscriber;
+                  }
+              }
 
-            if (empty($subscribersToSendTo)) {
-                 $errorMessage = 'No valid or verified subscribers were selected for sending.';
-            } else {
-                foreach ($subscribersToSendTo as $subscriber) {
-                    $toEmail = $subscriber['email'];
-                    $toName = htmlspecialchars($subscriber['full_name'] ?? 'Valued Subscriber'); // Sanitize and fallback
+              if (empty($subscribersToSendTo)) {
+                  $errorMessage = 'No valid or verified subscribers were selected for sending.';
+              } else {
+                  foreach ($subscribersToSendTo as $subscriber) {
+                      $toEmail = $subscriber['email'];
+                      $toName = htmlspecialchars($subscriber['full_name'] ?? 'Valued Subscriber'); // Sanitize and fallback
 
-                    // --- DYNAMIC REPLACEMENTS ---//
-                    // Personalize the full name
-                    $processedBody = str_replace('%full_name%', $toName, $body);
+                      // --- DYNAMIC REPLACEMENTS ---//
+                      // Personalize the full name
+                      $processedBody = str_replace('%full_name%', $toName, $body);
 
-                    // Construct the unique unsubscribe URL for the current subscriber
-                    $unsubscribeLink = $link->getUrl('/subscriber') . '?unsubscribe=true&email=' . urlencode($toEmail);
-                    
-                    // Replace the unsubscribe link in the HTML body
-                    $processedBody = str_replace('%unsubscribe_link%', $unsubscribeLink, $processedBody);
+                      // Construct the unique unsubscribe URL for the current subscriber
+                      $unsubscribeLink = $link->getUrl('/subscriber') . '?unsubscribe=true&email=' . urlencode($toEmail);
+                      
+                      // Replace the unsubscribe link in the HTML body
+                      $processedBody = str_replace('%unsubscribe_link%', $unsubscribeLink, $processedBody);
 
-                    // Create a plain text version for the altBody, applying both replacements
-                    $processedAltBody = strip_tags($body); // Start with plain text version of original body
-                    $processedAltBody = str_replace('%full_name%', $toName, $processedAltBody);
-                    $processedAltBody = str_replace('%unsubscribe_link%', $unsubscribeLink, $processedAltBody);
-                    // --- END DYNAMIC REPLACEMENTS ---
+                      // Create a plain text version for the altBody, applying both replacements
+                      $processedAltBody = strip_tags($body); // Start with plain text version of original body
+                      $processedAltBody = str_replace('%full_name%', $toName, $processedAltBody);
+                      $processedAltBody = str_replace('%unsubscribe_link%', $unsubscribeLink, $processedAltBody);
+                      // --- END DYNAMIC REPLACEMENTS ---
 
-                    try {
-                        $mailer->sendEmail($toEmail, $toName, $subject, $processedBody, $processedAltBody);
-                        $emailsSent++;
-                    } catch (Exception $e) {
-                        error_log("Failed to send email to {$toEmail}: " . $e->getMessage());
-                        $emailsFailed++;
-                    }
-                }
+                      try {
+                          $mailer->sendEmail($toEmail, $toName, $subject, $processedBody, $processedAltBody);
+                          $emailsSent++;
+                      } catch (Exception $e) {
+                          error_log("Failed to send email to {$toEmail}: " . $e->getMessage());
+                          $emailsFailed++;
+                      }
+                  }
 
-                if ($emailsSent > 0) {
-                    $successMessage = "Newsletter sent to {$emailsSent} subscribers successfully. " .
-                                      ($emailsFailed > 0 ? "({$emailsFailed} emails failed to send)." : "");
-                    // Clear form fields and reset body to default content on success
-                    $subject = '';
-                    $body = $defaultBodyContent;
-                    $selectedSubscriberEmails = []; // Clear selections
-                } else {
-                    $errorMessage = "No emails were sent. " .
-                                    ($emailsFailed > 0 ? "({$emailsFailed} emails failed to send)." : "Check subscriber selections.");
-                }
-            }
-        }
+                  if ($emailsSent > 0) {
+                      $successMessage = "Newsletter sent to {$emailsSent} subscribers successfully. " .
+                                        ($emailsFailed > 0 ? "({$emailsFailed} emails failed to send)." : "");
+                      // Clear form fields and reset body to default content on success
+                      $subject = '';
+                      $body = $defaultBodyContent;
+                      $selectedSubscriberEmails = []; // Clear selections
+                  } else {
+                      $errorMessage = "No emails were sent. " .
+                                      ($emailsFailed > 0 ? "({$emailsFailed} emails failed to send)." : "Check subscriber selections.");
+                  }
+              }
+          }
 
-        // Post/Redirect/Get pattern
-        $redirectUrl = $link->getUrl('/admin/compose-newsletter');
-        if (empty($errorMessage)) {
-             header('Location: ' . $redirectUrl . '?status=success');
-        }
-        exit();
+          // Post/Redirect/Get pattern
+          $redirectUrl = $link->getUrl('/admin/compose-newsletter');
+          if (empty($errorMessage)) {
+              header('Location: ' . $redirectUrl . '?status=success');
+          }
+          exit();
+      }
     }
     
     // Check for status messages after redirect (only for success from PRG)
@@ -357,6 +362,7 @@ include APP_DIR . '/admin/header-auth.php';
     </p>
 
     <form method="POST" action="<?php echo $link->getUrl('/admin/compose-newsletter'); ?>">
+      <input type="hidden" name="csrf_token" value="<?php echo $csrfToken; ?>">
         <div class="mb-3">
             <label for="subject" class="form-label">Subject</label>
             <input type="text" class="form-control" id="subject" name="subject" value="<?php echo htmlspecialchars($subject); ?>" required>

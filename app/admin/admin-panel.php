@@ -6,6 +6,7 @@ use App\Controllers\CommentController;
 use App\Helpers\AuthHelper;
 use App\AuthConstants;
 use App\Utils\Cache;
+use App\Helpers\CsrfHelper;
 
 // Load cache configuration and instantiate the Cache utility.
 $config = require (CACHE_CONFIG);
@@ -16,60 +17,51 @@ $pageTitle = "Admin Panel";
 // Require admin role (using our relaxed AuthHelper)
 AuthHelper::requireAdmin($auth, $link->getUrl('/users/login'));
 
-// Process user role update if form is submitted
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_user_id'])) {
-    $updateUserId = $_POST['update_user_id'];
-    $newRole = $_POST['new_role'] ?? AuthConstants::ROLE_SUBSCRIBER;
-    try {
-        // Remove any of our defined roles from this user.
-        $rolesToRemove = [
-            AuthConstants::ROLE_ADMIN,
-            AuthConstants::ROLE_AUTHOR,
-            AuthConstants::ROLE_SUBSCRIBER
-        ];
-        foreach ($rolesToRemove as $role) {
-            $auth->admin()->removeRoleForUserById($updateUserId, $role);
-        }
-        // Then add the selected role.
-        $auth->admin()->addRoleForUserById($updateUserId, $newRole);
-        header("Location: " . $link->getUrl("/admin") . "?msg=" . urlencode("User role updated successfully"));
-        exit;
-    } catch (\Exception $e) {
-        header("Location: " . $link->getUrl("/admin") . "?msg=" . urlencode("Error updating role: " . $e->getMessage()));
+// --- POST LOGIC (Secure) ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    
+    // Global CSRF Check for all POST actions
+    if (!CsrfHelper::isValid($_POST['csrf_token'] ?? '')) {
+        header("Location: " . $link->getUrl("/admin") . "?msg=" . urlencode("Security Token Expired"));
         exit;
     }
-}
 
-// Clear all cache option.
-if (isset($_GET['clear-cache'])) {
-    $cache->clearAllCache();
-    header("Location: " . $link->getUrl("/admin") . "?msg=" . urlencode("Cache cleared successfully"));
-    exit;
-}
+    // 1. Update User Role
+    if (isset($_POST['update_user_id'])) {
+        $updateUserId = $_POST['update_user_id'];
+        $newRole = $_POST['new_role'] ?? AuthConstants::ROLE_SUBSCRIBER;
+        try {
+            $rolesToRemove = [AuthConstants::ROLE_ADMIN, AuthConstants::ROLE_AUTHOR, AuthConstants::ROLE_SUBSCRIBER];
+            foreach ($rolesToRemove as $role) { $auth->admin()->removeRoleForUserById($updateUserId, $role); }
+            $auth->admin()->addRoleForUserById($updateUserId, $newRole);
+            header("Location: " . $link->getUrl("/admin") . "?msg=" . urlencode("User role updated successfully"));
+            exit;
+        } catch (\Exception $e) { /* Error handling... */ }
+    }
 
-// Process publish action if provided via GET parameter.
-if (isset($_GET['publish']) && is_numeric($_GET['publish'])) {
-    $postController = new PostController();
-    $postId = intval($_GET['publish']);
-    $postController->publish($postId);
-    // Clear all cache after publish.
-    $cache->clearAllCache();
-    header("Location: " . $link->getUrl("/admin") . "?msg=" . urlencode("Post published successfully"));
-    exit;
-}
-
-// Process user deletion if requested (new option)
-if (isset($_GET['delete_user']) && is_numeric($_GET['delete_user'])) {
-    $deleteUserId = intval($_GET['delete_user']);
-    try {
-        // You would implement a deleteUser method or similar logic here.
-        // For example:
-        $auth->admin()->deleteUserById($deleteUserId);
-        header("Location: " . $link->getUrl("/admin") . "?msg=" . urlencode("User deleted successfully"));
+    // 2. Clear Cache
+    if (isset($_POST['action']) && $_POST['action'] === 'clear-cache') {
+        $cache->clearAllCache();
+        header("Location: " . $link->getUrl("/admin") . "?msg=" . urlencode("Cache cleared successfully"));
         exit;
-    } catch (\Exception $e) {
-        header("Location: " . $link->getUrl("/admin") . "?msg=" . urlencode("Error deleting user: " . $e->getMessage()));
+    }
+
+    // 3. Publish Post
+    if (isset($_POST['publish_post_id'])) {
+        $postController = new PostController();
+        $postController->publish(intval($_POST['publish_post_id']));
+        $cache->clearAllCache();
+        header("Location: " . $link->getUrl("/admin") . "?msg=" . urlencode("Post published successfully"));
         exit;
+    }
+
+    // 4. Delete User
+    if (isset($_POST['delete_user_id'])) {
+        try {
+            $auth->admin()->deleteUserById(intval($_POST['delete_user_id']));
+            header("Location: " . $link->getUrl("/admin") . "?msg=" . urlencode("User deleted successfully"));
+            exit;
+        } catch (\Exception $e) { /* Error handling... */ }
     }
 }
 
@@ -102,7 +94,13 @@ include APP_DIR . '/admin/header-auth.php';
   <?php endif; ?>
   
   <h1 class="mb-4">Admin Panel</h1>
-  <a href="<?= $link->getUrl('/admin') ?>/?clear-cache=true" class="btn btn-warning btn-sm" onclick="return confirm('Are you sure you want to clear all cache?');">Clear All Cache</a>
+  <form method="POST" action="<?= $link->getUrl('/admin') ?>" class="d-inline">
+    <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+    <input type="hidden" name="action" value="clear-cache">
+    <button type="submit" class="btn btn-warning btn-sm" onclick="return confirm('Clear all cache?');">
+        Clear All Cache
+    </button>
+  </form>
   
   <!-- Section 1: Publish Draft Posts -->
   <h2>Publish Draft Posts</h2>
@@ -121,7 +119,13 @@ include APP_DIR . '/admin/header-auth.php';
             <td><?php echo htmlspecialchars($post['title'] ?? ' ', ENT_QUOTES, 'UTF-8'); ?></td>
             <td><?php echo htmlspecialchars(date('d F Y', strtotime($post['created_at']))); ?></td>
             <td>
-              <a href="<?= $link->getUrl('/admin') ?>/?publish=<?php echo $post['id']; ?>" class="btn btn-success btn-sm" onclick="return confirm('Publish this post?');">Publish</a>
+              <form method="POST" action="<?= $link->getUrl('/admin') ?>" class="d-inline">
+                  <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+                  <input type="hidden" name="publish_post_id" value="<?= $post['id'] ?>">
+                  <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Publish this post?');">
+                      Publish
+                  </button>
+              </form>       
             </td>
           </tr>
         <?php endforeach; ?>
@@ -141,7 +145,7 @@ include APP_DIR . '/admin/header-auth.php';
         <th>Username</th>
         <th>Current Role</th>
         <th>New Role</th>
-        <th>Update Role</th>
+
         <th>Delete User</th>
       </tr>
     </thead>
@@ -165,21 +169,25 @@ include APP_DIR . '/admin/header-auth.php';
             ?>
           </td>
           <td>
-            <form method="post" action="<?= $link->getUrl('/admin') ?>" class="mb-0">
-              <input type="hidden" name="update_user_id" value="<?php echo $user['id']; ?>">
-              <select name="new_role" class="form-select">
-                <option value="<?php echo AuthConstants::ROLE_SUBSCRIBER; ?>" <?php echo ($user['role'] == AuthConstants::ROLE_SUBSCRIBER) ? 'selected' : ''; ?>>Subscriber</option>
-                <option value="<?php echo AuthConstants::ROLE_AUTHOR; ?>" <?php echo ($user['role'] == AuthConstants::ROLE_AUTHOR) ? 'selected' : ''; ?>>Author</option>
-                <option value="<?php echo AuthConstants::ROLE_ADMIN; ?>" <?php echo ($user['role'] == AuthConstants::ROLE_ADMIN) ? 'selected' : ''; ?>>Admin</option>
-              </select>
+              <form method="post" action="<?= $link->getUrl('/admin') ?>" class="mb-0 d-flex gap-1">
+                  <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+                  <input type="hidden" name="update_user_id" value="<?= $user['id']; ?>">
+                  <select name="new_role" class="form-select form-select-sm">
+                      <option value="<?= AuthConstants::ROLE_SUBSCRIBER; ?>" <?= ($user['role'] == AuthConstants::ROLE_SUBSCRIBER) ? 'selected' : ''; ?>>Subscriber</option>
+                      <option value="<?= AuthConstants::ROLE_AUTHOR; ?>" <?= ($user['role'] == AuthConstants::ROLE_AUTHOR) ? 'selected' : ''; ?>>Author</option>
+                      <option value="<?= AuthConstants::ROLE_ADMIN; ?>" <?= ($user['role'] == AuthConstants::ROLE_ADMIN) ? 'selected' : ''; ?>>Admin</option>
+                  </select>
+                  <button type="submit" class="btn btn-primary btn-sm">Update</button>
+              </form>
           </td>
           <td>
-              <button type="submit" class="btn btn-primary btn-sm">Update</button>
-            </form>
-          </td>
-          <td>
-            <!-- New Delete User Option -->
-            <a href="<?= $link->getUrl('/admin') ?>/?delete_user=<?php echo $user['id']; ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this user?');">Delete</a>
+              <form method="POST" action="<?= $link->getUrl('/admin') ?>" class="d-inline">
+                  <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+                  <input type="hidden" name="delete_user_id" value="<?= $user['id'] ?>">
+                  <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Delete this user?');">
+                      Delete
+                  </button>
+              </form>
           </td>
         </tr>
       <?php endforeach; ?>
@@ -189,38 +197,48 @@ include APP_DIR . '/admin/header-auth.php';
   <!-- Section 3: Comment Moderation -->
   <h2>Comment Moderation</h2>
   <?php if (!empty($pendingComments)): ?>
-    <table class="table table-striped mb-5">
-      <thead>
-        <tr>
-          <th>Comment ID</th>
-          <th>Post ID</th>
-          <th>Author</th>
-          <th>Email</th>
-          <th>Comment</th>
-          <th>Posted On</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <?php foreach ($pendingComments as $comm): ?>
+    <form method="POST" action="<?= $link->getUrl('/admin/flag-comment') ?>" id="bulk-comment-form">
+      <input type="hidden" name="csrf_token" value="<?= $csrfToken; ?>">
+      
+      <div class="mb-2">
+        <button type="submit" name="action" value="approve" class="btn btn-success btn-sm">Approve Selected</button>
+        <button type="submit" name="action" value="delete" class="btn btn-danger btn-sm" onclick="return confirm('Delete selected comments?');">Delete Selected</button>
+      </div>
+
+      <table class="table table-striped mb-5">
+        <thead>
           <tr>
-            <td><?= htmlspecialchars($comm['id'] ?? ' ', ENT_QUOTES, 'UTF-8'); ?></td>
-            <td><a href="<?= $link->getUrl('/users/post-edit') . '?id=' . htmlspecialchars($comm['post_id'] ?? ' ', ENT_QUOTES, 'UTF-8'); ?>" target="_blank">Edit Post</a></td>
-            <td><?= htmlspecialchars($comm['author'] ?? ' ', ENT_QUOTES, 'UTF-8'); ?></td>
-            <td><?= htmlspecialchars($comm['email'] ?? ' ', ENT_QUOTES, 'UTF-8'); ?></td>
-            <td><?= htmlspecialchars(strip_tags($comm['comment'])) ?></td>
-            <td><?= htmlspecialchars(date('d F Y', strtotime($comm['created_at']))); ?></td>
-            <td>
-              <a href="<?= $link->getUrl('/admin/flag-comment') ?>/?action=approve&id=<?= $comm['id']; ?>&post_id=<?= $comm['post_id'] ?>" class="btn btn-success btn-sm">Approve</a>
-              <a href="<?= $link->getUrl('/admin/flag-comment') ?>/?action=delete&id=<?= $comm['id']; ?>&post_id=<?= $comm['post_id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Delete this comment?');">Delete</a>
-            </td>
+            <th><input type="checkbox" id="select-all-comments"></th> <th>Author</th>
+            <th>Comment</th>
+            <th>Posted On</th>
           </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          <?php foreach ($pendingComments as $comm): ?>
+            <tr>
+              <td>
+                <input type="checkbox" name="ids[]" value="<?= $comm['id']; ?>" class="comment-checkbox">
+              </td>
+              <td><?= htmlspecialchars($comm['author'] ?? ' ', ENT_QUOTES, 'UTF-8'); ?></td>
+              <td><?= htmlspecialchars(strip_tags($comm['comment'])) ?></td>
+              <td><?= htmlspecialchars(date('d F Y', strtotime($comm['created_at']))); ?></td>
+            </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+    </form>
   <?php else: ?>
     <p>No pending comments for moderation.</p>
   <?php endif; ?>
+
+  <script>
+  document.getElementById('select-all-comments').onclick = function() {
+      let checkboxes = document.getElementsByClassName('comment-checkbox');
+      for (let checkbox of checkboxes) {
+          checkbox.checked = this.checked;
+      }
+  }
+  </script>
 </div>
 
 <?php include APP_DIR . '/admin/footer-auth.php'; ?>
