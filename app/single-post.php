@@ -1,6 +1,5 @@
 <?php
 // app/single-post.php
-// require_once __DIR__ . '/../init.php';
 
 use App\Controllers\PostController;
 use App\Controllers\CommentController;
@@ -60,18 +59,22 @@ $nextPost = $postController->getNextPost($post['id']);
 // Process new comment submission
 $commentMessage = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment'])) {
-    $author  = trim($_POST['author'] ?? '');
-    $email   = trim($_POST['email'] ?? '');
-    $comment = trim($_POST['comment'] ?? '');
-    
-    if (!empty($author) && !empty($email) && !empty($comment)) {
-        $saved = $commentController->saveComment($post['id'], $author, $email, $comment);
-        $commentMessage = $saved ? "Your comment will be publish after moderation." : "Failed to submit your comment.";
+    // Check CSRF
+    if (!\App\Helpers\CsrfHelper::isValid($_POST['csrf_token'] ?? '')) {
+        $commentMessage = "Security token mismatch. Please refresh.";
     } else {
-        $commentMessage = "Please fill in all fields.";
+
+        $author  = trim($_POST['author'] ?? '');
+        $email   = trim($_POST['email'] ?? '');
+        $comment = trim($_POST['comment'] ?? '');
+        
+        if (!empty($author) && !empty($email) && !empty($comment)) {
+            $saved = $commentController->saveComment($post['id'], $author, $email, $comment);
+            $commentMessage = $saved ? "Your comment will be publish after moderation." : "Failed to submit your comment.";
+        } else {
+            $commentMessage = "Please fill in all fields.";
+        }
     }
-    
-    
 }
 
 // Retrieve approved comments for display
@@ -195,9 +198,9 @@ include APP_DIR . '/include/header.php';
                                   <p><?= nl2br(htmlspecialchars($comm['comment'] ?? ' ', ENT_QUOTES, 'UTF-8')); ?></p>
                                   <!-- Report Form for Comment -->
                                   <form method="post" action="<?= BASE_URL ?>/report-comment" onsubmit="return confirm('Report this comment for review?');" style="display:inline;">
-                                    <input type="hidden" name="id" value="<?= htmlspecialchars($comm['id']); ?>">
-                                    <input type="hidden" name="slug" value="<?= htmlspecialchars($post['slug']); ?>">
-                                    <button type="submit" class="btn btn-link p-0 m-0 align-baseline small text-danger">Report</button>
+                                      <input type="hidden" name="csrf_token" value="<?= $csrfToken; ?>"> <input type="hidden" name="id" value="<?= htmlspecialchars($comm['id']); ?>">
+                                      <input type="hidden" name="slug" value="<?= htmlspecialchars($post['slug']); ?>">
+                                      <button type="submit" class="btn btn-link p-0 m-0 align-baseline small text-danger">Report</button>
                                   </form>
                                 </li>
                               <?php endforeach; ?>
@@ -213,6 +216,7 @@ include APP_DIR . '/include/header.php';
                             <div class="alert alert-info"><?= htmlspecialchars($commentMessage ?? ' ', ENT_QUOTES, 'UTF-8'); ?></div>
                           <?php endif; ?>
                           <form method="post" action="" novalidate>
+                            <input type="hidden" name="csrf_token" value="<?= $csrfToken; ?>">
                             <div class="mb-3">
                               <label for="author" class="form-label">Name</label>
                               <input type="text" class="form-control" id="author" name="author" placeholder="Your name" required>
