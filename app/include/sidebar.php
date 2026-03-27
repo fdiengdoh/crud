@@ -9,7 +9,9 @@
          <h4>Subscribe To Newsletter</h4>
          <p class="border-top">Join our subscribers list to get the latest news, updates, and specials offers directly in your inbox.</p>
 
-         <form id="subscribeForm" novalidate> <div class="mb-3">
+         <form id="subscribeForm" novalidate>
+            <input type="hidden" name="csrf_token" value="">
+            <div class="mb-3">
                   <input type="text" class="form-control" id="sub_full_name" placeholder="Enter your full name" required>
             </div>
 
