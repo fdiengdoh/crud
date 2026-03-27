@@ -90,6 +90,7 @@ CREATE TABLE IF NOT EXISTS `categories` (
   `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- POSTS table
 CREATE TABLE IF NOT EXISTS `posts` (
   `id` INT(11) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   `user_id` INT(11) UNSIGNED NOT NULL,
@@ -130,3 +131,10 @@ CREATE TABLE IF NOT EXISTS comments (
     FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS `rate_limits` (
+  `ip_address` VARCHAR(45) NOT NULL,
+  `action` VARCHAR(50) NOT NULL,
+  `last_request` INT(11) NOT NULL,
+  `request_count` INT(11) DEFAULT 1,
+  PRIMARY KEY (`ip_address`, `action`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
