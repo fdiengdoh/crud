@@ -11,11 +11,11 @@
                   </a>
                   <p>I'm a hobbyist photographer, videographer, vlogger. I build webapps too using PHP - MySQL. I'm a Chemistry Teacher. </p>                  
                   <ul class="social pt-3">
-                     <li><a href="https://whatsapp.com/channel/0029Va9VuhPI1rcehvL1h91F"><i class="bi bi-whatsapp"></i></a></li>
-                     <li><a href="https://facebook.com/fdphy"><i class="bi bi-facebook"></i></a></li>
-                     <li><a href="https://www.twitter.com/fdphy_in"><i class="bi bi-twitter-x"></i></a></li>
-                     <li><a href="https://www.instagram.com/fdphy"><i class="bi bi-instagram"></i></a></li>
-                     <li><a href="https://www.youtube.com/fdphy"><i class="bi bi-youtube"></i></a></li>
+                     <li><a href="#"><i class="bi bi-whatsapp"></i></a></li>
+                     <li><a href="#"><i class="bi bi-facebook"></i></a></li>
+                     <li><a href="#"><i class="bi bi-twitter-x"></i></a></li>
+                     <li><a href="#"><i class="bi bi-instagram"></i></a></li>
+                     <li><a href="#"><i class="bi bi-youtube"></i></a></li>
                   </ul>
                </div>
             </div>
@@ -140,8 +140,9 @@
             formData.append('email', email);
             formData.append('full_name', full_name);
             
-            // INJECT THE CSRF TOKEN HERE
-            formData.append('csrf_token', '<?= $csrfToken ?>');
+            // Grab the token that was just injected by the global hydrator
+            const csrfInput = document.querySelector('#subscribeForm input[name="csrf_token"]');
+            formData.append('csrf_token', csrfInput ? csrfInput.value : '');
 
             notify_element.innerHTML = "Subscribing...";
             notify_element.style.color = "blue";
@@ -177,6 +178,29 @@
                notify_element.classList.add('text-danger');
             });
          });
+
+         /**
+          * Global CSRF Hydrator for Cached Pages
+          */
+         function getCookie(name) {
+            let value = "; " + document.cookie;
+            let parts = value.split("; " + name + "=");
+            if (parts.length === 2) return parts.pop().split(";").shift();
+            return null;
+         }
+
+         function hydrateCsrfTokens() {
+            const token = getCookie('csrf_token');
+            if (token) {
+               // Targets all inputs named csrf_token across all forms
+               document.querySelectorAll('input[name="csrf_token"]').forEach(input => {
+                     input.value = token;
+               });
+            }
+         }
+
+         // Run as soon as the DOM is ready
+         document.addEventListener("DOMContentLoaded", hydrateCsrfTokens);
 
          // Show/hide the button based on window scroll position
          window.addEventListener('scroll', function () {
