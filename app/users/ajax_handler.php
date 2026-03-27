@@ -14,14 +14,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 use App\Controllers\PostController;
 use App\Controllers\SubscribersController;
-use App\Helpers\CsrfHelper; // Import the Helper
+use App\Helpers\CsrfHelper;
+use App\Helpers\RateLimitHelper;
 
 $response = ['success' => false, 'message' => 'Invalid request.'];
 
 try {
     // --- 1. HANDLE SUBSCRIPTION (POST + CSRF) ---
-    // We check $_POST because our new AJAX script sends a POST request
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['subscribe'])) {
+        // Check Rate Limit: Only 3 subscription attempts per 10 minutes per IP
+        if (!RateLimitHelper::isAllowed('subscribe', 3, 600)) {
+            http_response_code(429); // Too Many Requests
+            echo json_encode(['success' => false, 'message' => 'Too many requests. Please try again in 10 minutes.']);
+            exit;
+        }
         
         // CSRF VALIDATION
         if (!CsrfHelper::isValid($_POST['csrf_token'] ?? '')) {
