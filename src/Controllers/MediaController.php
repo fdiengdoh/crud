@@ -1,11 +1,14 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Controllers;
 
 class MediaController
 {
     private string $uploadDir;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->uploadDir = PUBLIC_DIR . '/uploads/';
     }
 
@@ -27,18 +30,15 @@ class MediaController
         $targetPath = $targetDir . '/' . $originalName;
 
         if (move_uploaded_file($file['tmp_name'], $targetPath)) {
-            // If the file is an SVG, return it directly (skip conversion & resizing)
             if ($extension === 'svg') {
                 return ['image' => 'uploads/' . $subDir . '/' . $uniqueDir . '/' . $originalName, 'dir' => 'uploads/' . $subDir . '/' . $uniqueDir . '/'];
             }
 
-            // Convert to WebP before resizing (for JPG/PNG)
             $webpPath = $this->convertToWebp($targetPath);
             if ($webpPath) {
                 $targetPath = $webpPath;
             }
 
-            // Resize images using the WebP file
             $this->resizeImage($targetPath, $targetDir . "/300x300.webp", 300, 300);
             $this->resizeImage($targetPath, $targetDir . "/500x500.webp", 500, 500);
             $this->resizeImage($targetPath, $targetDir . "/1600x900.webp", 1600, 900);
@@ -85,7 +85,6 @@ class MediaController
         $mimeType = finfo_file($finfo, $file['tmp_name']);
         finfo_close($finfo);
 
-        // Allow both raster images and SVG files
         $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
 
         return in_array($mimeType, $allowedTypes, true) || (!$isRasterImage && $mimeType === 'image/svg+xml');
@@ -123,7 +122,7 @@ class MediaController
 
         $newImage = imagecreatetruecolor($targetWidth, $targetHeight);
         imagecopyresampled(
-            $newImage, $srcImage, 
+            $newImage, $srcImage,
             0, 0,
             $srcX, $srcY,
             $targetWidth, $targetHeight,
