@@ -1,164 +1,156 @@
 <?php
-namespace App\Utils;
+declare(strict_types=1);
 
-class Cache {
-    private $cacheDir;
-    private $ttl;
-    private $enabled;
+namespace App;
 
-    public function __construct($config) {
-        $this->cacheDir = $config['cache_dir'];
-        $this->ttl = $config['cache_ttl'];
-        $this->enabled = $config['cache_enabled'];
+use Redis;
+use RedisException;
 
-        // Ensure cache directory exists.
-        if (!is_dir($this->cacheDir)) {
-            // Use 0775 for directory permissions as it's typically safer than 0777
-            mkdir($this->cacheDir, 0775, true);
+class Cache
+{
+    private Redis $redis;
+    private int $defaultTtl = 3600; // Default 1 hour
+
+    public function __construct(string $host = 'localhost', int $port = 6379, int $defaultTtl = 3600)
+    {
+        $this->redis = new Redis();
+        try {
+            $this->redis->connect($host, $port);
+        } catch (RedisException $e) {
+            error_log("Redis Connection Error: " . $e->getMessage());
+            throw $e;
         }
+        $this->defaultTtl = $defaultTtl;
     }
 
     /**
-     * Generate a cache file path based on the URL, preserving the URL structure.
+     * Get a value from cache.
      *
-     * Example: "/2023/03/my-slug-file.html" becomes "{cacheDir}/2023/03/my-slug-file.html"
-     *
-     * @param string $url
-     * @return string
+     * @param string $key Cache key
+     * @return mixed
      */
-    public function getCacheFile($url) {
-        if($url === '/' || $url === ''){
-            $cacheFile = $this->cacheDir . '/home.html';
-        }else{
-            
-            // Remove any leading slash from the URL
-            $relativeUrl = ltrim($url, '/');
-            // Build the full path by combining the cache directory and the relative URL path
-            $cacheFile = $this->cacheDir . '/' . $relativeUrl;
-            // Ensure that the directory for the cache file exists
-            $dir = dirname($cacheFile);
-            if (!is_dir($dir)) {
-                // Ensure correct permissions (e.g., 0775)
-                mkdir($dir, 0775, true);
-            }
+    public function get(string $key): mixed
+    {
+        try {
+            $value = $this->redis->get($key);
+            return $value !== false ? unserialize($value) : null;
+        } catch (RedisException $e) {
+            error_log("Cache Get Error: " . $e->getMessage());
+            return null;
         }
-        return $cacheFile;
     }
 
     /**
-     * Check if a cached file exists and is still valid.
+     * Set a value in cache.
      *
-     * @param string $url
+     * @param string $key Cache key
+     * @param mixed $value Value to cache
+     * @param int|null $ttl Time to live in seconds (optional)
      * @return bool
      */
-    public function isCached($url) {
-        if (!$this->enabled) {
+    public function set(string $key, mixed $value, ?int $ttl = null): bool
+    {
+        try {
+            $ttl = $ttl ?? $this->defaultTtl;
+            return $this->redis->setex($key, $ttl, serialize($value));
+        } catch (RedisException $e) {
+            error_log("Cache Set Error: " . $e->getMessage());
             return false;
         }
-        $file = $this->getCacheFile($url);
-        // Ensure the file exists before checking its modification time
-        return file_exists($file) && (time() - filemtime($file) < $this->ttl);
     }
 
     /**
-     * Retrieve cached content.
+     * Delete a key from cache.
      *
-     * @param string $url
-     * @return string|false The cached content as a string, or false if not found, expired, or error.
+     * @param string $key Cache key
+     * @return bool
      */
-    public function getCache($url) {
-        if (!$this->enabled) {
+    public function delete(string $key): bool
+    {
+        try {
+            return (bool)$this->redis->del($key);
+        } catch (RedisException $e) {
+            error_log("Cache Delete Error: " . $e->getMessage());
             return false;
         }
-
-        $file = $this->getCacheFile($url);
-
-        if (!file_exists($file)) {
-            return false; // File does not exist, so it's a cache miss.
-        }
-
-        // Use @file_get_contents to suppress potential warnings if reading somehow fails
-        // (though file_exists should prevent most "no such file" issues).
-        $content = @file_get_contents($file);
-
-        // If file_get_contents returns false (e.g., permission issue), treat as a miss
-        if ($content === false) {
-            error_log("Cache Error: Could not read cache file: " . $file);
-            @unlink($file); // Attempt to delete a potentially problematic file
-            return false;
-        }
-
-        return $content; // Return the raw content (HTML or JSON string)
     }
 
     /**
-     * Store content in cache.
+     * Clear all cache.
      *
-     * @param string $url
-     * @param string $content
-     * @return bool True on success, false on failure.
+     * @return bool
      */
-    public function storeCache($url, $content) {
-        if (!$this->enabled) {
+    public function flush(): bool
+    {
+        try {
+            return $this->redis->flushDb();
+        } catch (RedisException $e) {
+            error_log("Cache Flush Error: " . $e->getMessage());
             return false;
         }
-        $file = $this->getCacheFile($url);
-        // file_put_contents returns bytes written or false on failure
-        return file_put_contents($file, $content) !== false;
     }
 
     /**
-     * Invalidate cache for a specific URL.
+     * Check if key exists in cache.
      *
-     * @param string $url
-     * @return bool True if file was deleted or didn't exist, false on error.
+     * @param string $key Cache key
+     * @return bool
      */
-    public function clearCache($url) {
-        $file = $this->getCacheFile($url);
-        if (file_exists($file)) {
-            return unlink($file);
+    public function exists(string $key): bool
+    {
+        try {
+            return (bool)$this->redis->exists($key);
+        } catch (RedisException $e) {
+            error_log("Cache Exists Error: " . $e->getMessage());
+            return false;
         }
-        return true; // Already gone or never existed
     }
 
     /**
-     * Clear all cached files recursively.
-     * @return bool True on complete success, false if any file/dir couldn't be deleted.
+     * Increment a numeric cache value.
+     *
+     * @param string $key Cache key
+     * @param int $increment Amount to increment by
+     * @return int|false
      */
-    public function clearAllCache() {
-        $success = true;
-        if (!is_dir($this->cacheDir)) {
-            return true; // Nothing to clear if directory doesn't exist
+    public function increment(string $key, int $increment = 1): int|false
+    {
+        try {
+            return $this->redis->incrBy($key, $increment);
+        } catch (RedisException $e) {
+            error_log("Cache Increment Error: " . $e->getMessage());
+            return false;
         }
+    }
 
-        $files = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($this->cacheDir, \RecursiveDirectoryIterator::SKIP_DOTS),
-            \RecursiveIteratorIterator::CHILD_FIRST
-        );
-    
-        foreach ($files as $fileinfo) {
-            if ($fileinfo->isFile()) {
-                if (!unlink($fileinfo->getRealPath())) {
-                    $success = false;
-                    error_log("Cache Error: Failed to delete file: " . $fileinfo->getRealPath());
-                }
-            } elseif ($fileinfo->isDir()) {
-                // @rmdir to suppress warning if dir is not empty (though CHILD_FIRST should handle this)
-                if (!@rmdir($fileinfo->getRealPath())) {
-                    $success = false;
-                    error_log("Cache Error: Failed to remove directory: " . $fileinfo->getRealPath());
-                }
-            }
+    /**
+     * Decrement a numeric cache value.
+     *
+     * @param string $key Cache key
+     * @param int $decrement Amount to decrement by
+     * @return int|false
+     */
+    public function decrement(string $key, int $decrement = 1): int|false
+    {
+        try {
+            return $this->redis->decrBy($key, $decrement);
+        } catch (RedisException $e) {
+            error_log("Cache Decrement Error: " . $e->getMessage());
+            return false;
         }
-        
-        // Finally, try to remove the root cache directory itself if it's empty
-        // Only attempt if it still exists and is empty
-        if (is_dir($this->cacheDir) && count(glob($this->cacheDir . '/*')) === 0) {
-            if (!@rmdir($this->cacheDir)) {
-                $success = false;
-                error_log("Cache Error: Failed to remove root cache directory: " . $this->cacheDir);
-            }
+    }
+
+    /**
+     * Close Redis connection.
+     *
+     * @return void
+     */
+    public function close(): void
+    {
+        try {
+            $this->redis->close();
+        } catch (RedisException $e) {
+            error_log("Cache Close Error: " . $e->getMessage());
         }
-        return $success;
     }
 }
