@@ -1,3 +1,5 @@
+⚠️ **WARNING: This application requires PHP 8.5 or above. It will not work on earlier PHP versions.**
+
 # CRUD Blog App
 
 This is a PHP-based CRUD Blog App that uses PSR-4 autoloading that features pretty URLs, a custom caching system, authentication via [delight-im/auth](https://github.com/delight-im/PHP-Auth), [PHP Mailer](https://github.com/PHPMailer/PHPMailer) for sending email and flexible routing system. The CRUD system would allow admin/authors for creating posts and admins to manage categories. A public viewer can comment on a post. 
@@ -139,80 +141,80 @@ Each class is well commented on their uses, so feel free to explore the [src](sr
 ```
 project-root/
 ├── app/
-│   ├── admin/
-│   │   ├── admin-categories.php      # Admin categories management
-│   │   ├── admin-flag-comment.php    # Admin flag comments
-│   │   ├── admin-panel.php           # Admin panel for various functions
-│   │   ├── footer-auth.php           # Authenticated pages footer
-│   │   ├── header-auth.php           # Authenticated pages header
-│   │   ├── upload-image.php          # Upload images functionality
-│   │   └── view-logs.php             # Admin view error logs for live environment
-│   ├── include/
-│   │   ├── footer.php                # Common footer for public pages
-│   │   ├── header.php                # Common header for public pages
-│   │   ├── nav.php                   # Common navigation for public pages
-│   │   └── sidebar.php               # Common sidebar for public pages
-│   ├── users/
-│   │   ├── ajax_handler.php          # Ajax handler file
-│   │   ├── edit-profile.php          # User edit profile
-│   │   ├── forgot-password.php       # User forgot password function
-│   │   ├── increment-view.php        # Increment views of a page
-│   │   ├── login.php                 # Login function
-│   │   ├── my-posts.php              # List users post
-│   │   ├── post-create.php           # Create a new post
-│   │   ├── post-delete.php           # Delete post
-│   │   ├── post-edit.php             # Edit existing post
-│   │   ├── profile.php               # View User's Profile
-│   │   ├── register.php              # Register a new user
-│   │   ├── reset-password.php        # Reset password of an existing user
-│   │   └── verify.php                # Email based verification for new user
-│   ├── 404.php                       # Public 404 Error page
-│   ├── category.php                  # Public list of categories
-│   ├── home.php                      # Public Home page
-│   ├── report-comment.php            # Public report comments
-│   └── single-post.php               # Public show a single post
+│   ├── admin/
+│   │   ├── admin-categories.php      # Admin categories management
+│   │   ├── admin-flag-comment.php    # Admin flag comments
+│   │   ├── admin-panel.php           # Admin panel for various functions
+│   │   ├── footer-auth.php           # Authenticated pages footer
+│   │   ├── header-auth.php           # Authenticated pages header
+│   │   ├── upload-image.php          # Upload images functionality
+│   │   └── view-logs.php             # Admin view error logs for live environment
+│   ├── include/
+│   │   ├── footer.php                # Common footer for public pages
+│   │   ├── header.php                # Common header for public pages
+│   │   ├── nav.php                   # Common navigation for public pages
+│   │   └── sidebar.php               # Common sidebar for public pages
+│   ├── users/
+│   │   ├── ajax_handler.php          # Ajax handler file
+│   │   ├── edit-profile.php          # User edit profile
+│   │   ├── forgot-password.php       # User forgot password function
+│   │   ├── increment-view.php        # Increment views of a page
+│   │   ├── login.php                 # Login function
+│   │   ├── my-posts.php              # List users post
+│   │   ├── post-create.php           # Create a new post
+│   │   ├── post-delete.php           # Delete post
+│   │   ├── post-edit.php             # Edit existing post
+│   │   ├── profile.php               # View User's Profile
+│   │   ├─�� register.php              # Register a new user
+│   │   ├── reset-password.php        # Reset password of an existing user
+│   │   └── verify.php                # Email based verification for new user
+│   ├── 404.php                       # Public 404 Error page
+│   ├── category.php                  # Public list of categories
+│   ├── home.php                      # Public Home page
+│   ├── report-comment.php            # Public report comments
+│   └── single-post.php               # Public show a single post
 ├── cache_config/
-│   └── config.php                    # Cache configuration file
+│   └── config.php                    # Cache configuration file
 ├── logs/
-│   └── error.log                     # Error logs for live environment
+│   └── error.log                     # Error logs for live environment
 ├── public_html/                      # Publicly accesible files
-│   ├── assets/
-│   │   ├── image/
-│   │   │   ├── default-feature.jpg   # Default feature image in jpg
-│   │   │   └── default-feature.webp  # Default feature image in webp
-│   │   └── profile/
-│   │       └── profile.png           # Default profile image
-│   ├── css/
-│   │   ├── carousel.css              # Carousel css
-│   │   ├── carousel.min.css
-│   │   ├── style.css                 # public pages style css
-│   │   └── style.min.css
-│   ├── uploads/                      # Uploaded images dir
-│   ├── js/                           # vendor js
-│   ├── blog-theme.html               # sample blog-theme in bootstrap 5
-│   ├── category-theme.html           # sample category theme in bootstrap 5
-│   ├── favicon.ico                   # sample favicon
-│   ├── .htaccess                     # Sample .htaccess for routing
-│   ├── index.php                     # index.ph file for routing pretty url
-│   ├── install.php                   # install file for use at the start
-│   └── theme.html                    # public home page theme
+│   ├── assets/
+│   │   ├── image/
+│   │   │   ├── default-feature.jpg   # Default feature image in jpg
+│   │   │   └── default-feature.webp  # Default feature image in webp
+│   │   └── profile/
+│   │       └── profile.png           # Default profile image
+│   ├── css/
+│   │   ├── carousel.css              # Carousel css
+│   │   ├── carousel.min.css
+│   │   ├── style.css                 # public pages style css
+│   │   └── style.min.css
+│   ├── uploads/                      # Uploaded images dir
+│   ├── js/                           # vendor js
+│   ├── blog-theme.html               # sample blog-theme in bootstrap 5
+│   ├── category-theme.html           # sample category theme in bootstrap 5
+│   ├── favicon.ico                   # sample favicon
+│   ├── .htaccess                     # Sample .htaccess for routing
+│   ├── index.php                     # index.ph file for routing pretty url
+│   ├── install.php                   # install file for use at the start
+│   └── theme.html                    # public home page theme
 ├── src/
-│   ├── Controllers/                  # Various controller class
-│   │   ├── AuthController.php
-│   │   ├── CategoryController.php
-│   │   ├── CommentController.php
-│   │   ├── MediaController.php
-│   │   ├── PostController.php
-│   │   └── ProfileController.php
-│   ├── Helpers/                      # Helper Class
-│   │   ├── AuthHelper.php
-│   │   └── Link.php
-│   ├── Utils/
-│   │   └── Cache.php                 # Cache class
-│   ├── AuthConstants.php             # Role constants (ROLE_ADMIN, ROLE_AUTHOR, ROLE_SUBSCRIBER)
-│   ├── Database.php                  # Database connection handler
-│   ├── Mailer.php                    # Email-sending class using PHPMailer
-│   └── ProfileManager.php            # Profile manager class
+│   ├── Controllers/                  # Various controller class
+│   │   ├── AuthController.php
+│   │   ├── CategoryController.php
+│   │   ├── CommentController.php
+│   │   ├── MediaController.php
+│   │   ├── PostController.php
+│   │   └── ProfileController.php
+│   ├── Helpers/                      # Helper Class
+│   │   ├── AuthHelper.php
+│   │   └── Link.php
+│   ├── Utils/
+│   │   └── Cache.php                 # Cache class
+│   ├── AuthConstants.php             # Role constants (ROLE_ADMIN, ROLE_AUTHOR, ROLE_SUBSCRIBER)
+│   ├── Database.php                  # Database connection handler
+│   ├── Mailer.php                    # Email-sending class using PHPMailer
+│   └── ProfileManager.php            # Profile manager class
 ├── vendor/                           # Composer packages
 ├── composer.json                     # Composer dependencies configuration
 ├── composer.lock
