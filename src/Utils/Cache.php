@@ -3,154 +3,181 @@ declare(strict_types=1);
 
 namespace App;
 
-use Redis;
-use RedisException;
-
 class Cache
 {
-    private Redis $redis;
-    private int $defaultTtl = 3600; // Default 1 hour
-
-    public function __construct(string $host = 'localhost', int $port = 6379, int $defaultTtl = 3600)
-    {
-        $this->redis = new Redis();
-        try {
-            $this->redis->connect($host, $port);
-        } catch (RedisException $e) {
-            error_log("Redis Connection Error: " . $e->getMessage());
-            throw $e;
-        }
-        $this->defaultTtl = $defaultTtl;
-    }
+    private string $cacheDir;
+    private int $ttl;
+    private bool $enabled;
 
     /**
-     * Get a value from cache.
+     * Initialize cache with configuration.
      *
-     * @param string $key Cache key
-     * @return mixed
+     * @param array $config Configuration array with keys: cache_dir, cache_ttl, cache_enabled
      */
-    public function get(string $key): mixed
+    public function __construct(array $config): void
     {
-        try {
-            $value = $this->redis->get($key);
-            return $value !== false ? unserialize($value) : null;
-        } catch (RedisException $e) {
-            error_log("Cache Get Error: " . $e->getMessage());
-            return null;
+        $this->cacheDir = $config['cache_dir'];
+        $this->ttl = $config['cache_ttl'];
+        $this->enabled = $config['cache_enabled'];
+
+        // Ensure cache directory exists
+        if (!is_dir($this->cacheDir)) {
+            mkdir($this->cacheDir, 0775, true);
         }
     }
 
     /**
-     * Set a value in cache.
+     * Generate a cache file path based on the URL, preserving the URL structure.
      *
-     * @param string $key Cache key
-     * @param mixed $value Value to cache
-     * @param int|null $ttl Time to live in seconds (optional)
-     * @return bool
+     * Example: "/2023/03/my-slug-file.html" becomes "{cacheDir}/2023/03/my-slug-file.html"
+     *
+     * @param string $url The URL to cache
+     * @return string The cache file path
      */
-    public function set(string $key, mixed $value, ?int $ttl = null): bool
+    public function getCacheFile(string $url): string
     {
-        try {
-            $ttl = $ttl ?? $this->defaultTtl;
-            return $this->redis->setex($key, $ttl, serialize($value));
-        } catch (RedisException $e) {
-            error_log("Cache Set Error: " . $e->getMessage());
+        if ($url === '/' || $url === '') {
+            $cacheFile = $this->cacheDir . '/home.html';
+        } else {
+            // Remove any leading slash from the URL
+            $relativeUrl = ltrim($url, '/');
+            // Build the full path by combining the cache directory and the relative URL path
+            $cacheFile = $this->cacheDir . '/' . $relativeUrl;
+            // Ensure that the directory for the cache file exists
+            $dir = dirname($cacheFile);
+            if (!is_dir($dir)) {
+                mkdir($dir, 0775, true);
+            }
+        }
+        return $cacheFile;
+    }
+
+    /**
+     * Check if a cached file exists and is still valid.
+     *
+     * @param string $url The URL to check
+     * @return bool True if cached and valid, false otherwise
+     */
+    public function isCached(string $url): bool
+    {
+        if (!$this->enabled) {
             return false;
         }
+
+        $file = $this->getCacheFile($url);
+        
+        // Ensure the file exists before checking its modification time
+        return file_exists($file) && (time() - filemtime($file) < $this->ttl);
     }
 
     /**
-     * Delete a key from cache.
+     * Retrieve cached content.
      *
-     * @param string $key Cache key
-     * @return bool
+     * @param string $url The URL to retrieve from cache
+     * @return string|false The cached content as a string, or false if not found, expired, or error
      */
-    public function delete(string $key): bool
+    public function getCache(string $url): string|false
     {
-        try {
-            return (bool)$this->redis->del($key);
-        } catch (RedisException $e) {
-            error_log("Cache Delete Error: " . $e->getMessage());
+        if (!$this->enabled) {
             return false;
         }
-    }
 
-    /**
-     * Clear all cache.
-     *
-     * @return bool
-     */
-    public function flush(): bool
-    {
-        try {
-            return $this->redis->flushDb();
-        } catch (RedisException $e) {
-            error_log("Cache Flush Error: " . $e->getMessage());
+        $file = $this->getCacheFile($url);
+
+        if (!file_exists($file)) {
+            return false; // File does not exist, so it's a cache miss
+        }
+
+        // Use @file_get_contents to suppress potential warnings if reading fails
+        $content = @file_get_contents($file);
+
+        // If file_get_contents returns false (e.g., permission issue), treat as a miss
+        if ($content === false) {
+            error_log("Cache Error: Could not read cache file: " . $file);
+            @unlink($file); // Attempt to delete a potentially problematic file
             return false;
         }
+
+        return $content; // Return the raw content (HTML or JSON string)
     }
 
     /**
-     * Check if key exists in cache.
+     * Store content in cache.
      *
-     * @param string $key Cache key
-     * @return bool
+     * @param string $url The URL to cache
+     * @param string $content The content to store
+     * @return bool True on success, false on failure
      */
-    public function exists(string $key): bool
+    public function storeCache(string $url, string $content): bool
     {
-        try {
-            return (bool)$this->redis->exists($key);
-        } catch (RedisException $e) {
-            error_log("Cache Exists Error: " . $e->getMessage());
+        if (!$this->enabled) {
             return false;
         }
-    }
 
-    /**
-     * Increment a numeric cache value.
-     *
-     * @param string $key Cache key
-     * @param int $increment Amount to increment by
-     * @return int|false
-     */
-    public function increment(string $key, int $increment = 1): int|false
-    {
-        try {
-            return $this->redis->incrBy($key, $increment);
-        } catch (RedisException $e) {
-            error_log("Cache Increment Error: " . $e->getMessage());
+        $file = $this->getCacheFile($url);
+
+        if (!file_exists(dirname($file))) {
+            mkdir(dirname($file), 0775, true);
+        }
+
+        if (@file_put_contents($file, $content) === false) {
+            error_log("Cache Error: Could not write to cache file: " . $file);
             return false;
         }
+
+        return true;
     }
 
     /**
-     * Decrement a numeric cache value.
+     * Delete a specific cache file.
      *
-     * @param string $key Cache key
-     * @param int $decrement Amount to decrement by
-     * @return int|false
+     * @param string $url The URL to delete from cache
+     * @return bool True on success, false on failure
      */
-    public function decrement(string $key, int $decrement = 1): int|false
+    public function deleteCache(string $url): bool
     {
-        try {
-            return $this->redis->decrBy($key, $decrement);
-        } catch (RedisException $e) {
-            error_log("Cache Decrement Error: " . $e->getMessage());
+        if (!$this->enabled) {
             return false;
         }
+
+        $file = $this->getCacheFile($url);
+
+        if (!file_exists($file)) {
+            return true; // Already doesn't exist, so consider it success
+        }
+
+        if (!@unlink($file)) {
+            error_log("Cache Error: Could not delete cache file: " . $file);
+            return false;
+        }
+
+        return true;
     }
 
     /**
-     * Close Redis connection.
+     * Clear all cache files.
      *
-     * @return void
+     * @return bool True on success, false on failure
      */
-    public function close(): void
+    public function clearCache(): bool
     {
-        try {
-            $this->redis->close();
-        } catch (RedisException $e) {
-            error_log("Cache Close Error: " . $e->getMessage());
+        if (!$this->enabled) {
+            return false;
         }
+
+        $files = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($this->cacheDir, \RecursiveDirectoryIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::CHILD_FIRST
+        );
+
+        foreach ($files as $file) {
+            if ($file->isDir()) {
+                @rmdir($file->getRealPath());
+            } else {
+                @unlink($file->getRealPath());
+            }
+        }
+
+        return true;
     }
 }
