@@ -1,5 +1,3 @@
-⚠️ **WARNING: This application requires PHP 8.5 or above. It will not work on earlier PHP versions.**
-
 # CRUD Blog App
 
 This is a PHP-based CRUD Blog App that uses PSR-4 autoloading that features pretty URLs, a custom caching system, authentication via [delight-im/auth](https://github.com/delight-im/PHP-Auth), [PHP Mailer](https://github.com/PHPMailer/PHPMailer) for sending email and flexible routing system. The CRUD system would allow admin/authors for creating posts and admins to manage categories. A public viewer can comment on a post. 
