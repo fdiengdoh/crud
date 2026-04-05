@@ -171,11 +171,6 @@ include APP_DIR . '/include/header.php';
                         </button>
                       </li>
                       <li class="nav-item" role="presentation">
-                        <button class="nav-link text-dark" id="fb-tab" data-bs-toggle="tab" data-bs-target="#fb" type="button" role="tab" aria-controls="fb" aria-selected="false">
-                          Facebook Comments
-                        </button>
-                      </li>
-                      <li class="nav-item" role="presentation">
                         <button class="nav-link text-dark" id="disqus-tab" data-bs-toggle="tab" data-bs-target="#disqus" type="button" role="tab" aria-controls="disqus" aria-selected="false">
                           Disqus Comments
                         </button>
@@ -233,14 +228,6 @@ include APP_DIR . '/include/header.php';
                             <button type="submit" class="btn btn-primary">Submit Comment</button>
                           </form>
                         </div>
-                      </div>
-                      
-                      <!-- Facebook Comments Tab -->
-                      <div class="tab-pane fade" id="fb" role="tabpanel" aria-labelledby="fb-tab">
-                        <!-- Facebook Comments Plugin -->
-                        <div id="fb-root"></div>
-                        <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v22.0"></script>
-                        <div class="fb-comments" data-href="<?= BASE_URL . '/' . htmlspecialchars($post['slug']) ?>" data-width="100%" data-numposts="5"></div>
                       </div>
                       
                       <!-- Disqus Comments Tab -->
