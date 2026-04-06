@@ -1,8 +1,10 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Helpers;
 
-class Link {
-    // Public property so routes can be set or modified externally.
+class Link
+{
     public array $routes = [];
 
     /**
@@ -10,7 +12,8 @@ class Link {
      *
      * @param array $routes
      */
-    public function __construct(array $routes = []) {
+    public function __construct(array $routes = [])
+    {
         if (!empty($routes)) {
             $this->routes = $routes;
         } else {
@@ -52,6 +55,7 @@ class Link {
                 ],
                 '/admin'                 => [
                     'url'  => BASE_URL . '/admin',
+
                     'file' => APP_DIR . '/admin/admin-panel.php'
                 ],
                 '/admin/categories'      => [
@@ -89,7 +93,8 @@ class Link {
      * @param string $key The route key (e.g., '/login')
      * @return string|null
      */
-    public function getUrl(string $key): ?string {
+    public function getUrl(string $key): ?string
+    {
         return $this->routes[$key]['url'] ?? null;
     }
 
@@ -99,7 +104,8 @@ class Link {
      * @param string $key The route key (e.g., '/login')
      * @return string|null
      */
-    public function getFile(string $key): ?string {
+    public function getFile(string $key): ?string
+    {
         // Check if the key even exists in our defined routes
         if (!isset($this->routes[$key]['file'])) {
             return null;
