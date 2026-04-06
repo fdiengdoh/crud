@@ -1,19 +1,25 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Helpers;
 
 use App\Database;
 use PDO;
 
-class RateLimitHelper {
+class RateLimitHelper
+{
     /**
-     * @param string $action  The unique name for the action (e.g., 'subscribe')
-     * @param int $limit      Max number of requests allowed
-     * @param int $timeFrame  Time window in seconds (e.g., 60 for 1 minute)
-     * @return bool           True if allowed, False if throttled
+     * Check if an action is allowed based on rate limiting rules.
+     *
+     * @param string $action The unique name for the action (e.g., 'subscribe')
+     * @param int $limit Max number of requests allowed
+     * @param int $timeFrame Time window in seconds (e.g., 60 for 1 minute)
+     * @return bool True if allowed, False if throttled
      */
-    public static function isAllowed($action, $limit = 5, $timeFrame = 60) {
+    public static function isAllowed(string $action, int $limit = 5, int $timeFrame = 60): bool
+    {
         $pdo = Database::getConnection();
-        $ip = $_SERVER['REMOTE_ADDR'];
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
         $now = time();
 
         // 1. Clean up old entries (Optional: Move to a cron job if site gets heavy traffic)
@@ -27,14 +33,14 @@ class RateLimitHelper {
 
         if ($record) {
             // If the time window has passed, reset the counter
-            if (($now - $record['last_request']) > $timeFrame) {
+            if (($now - (int)$record['last_request']) > $timeFrame) {
                 $stmt = $pdo->prepare("UPDATE rate_limits SET request_count = 1, last_request = ? WHERE ip_address = ? AND action = ?");
                 $stmt->execute([$now, $ip, $action]);
                 return true;
             }
 
             // If they are over the limit, block them
-            if ($record['request_count'] >= $limit) {
+            if ((int)$record['request_count'] >= $limit) {
                 return false;
             }
 
