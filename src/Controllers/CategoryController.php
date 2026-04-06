@@ -1,60 +1,67 @@
 <?php
-declare(strict_types=1);
-
 namespace App\Controllers;
 
 use App\Database;
 use PDO;
 
-class CategoryController
-{
-    protected PDO $pdo;
+class CategoryController {
 
-    public function __construct()
-    {
+    protected $pdo;
+    
+    public function __construct() {
         $this->pdo = Database::getConnection();
     }
-
-    public function createCategory(string $name, string $slug): bool
-    {
+    
+    // Create a new category
+    public function createCategory($name, $slug) {
         $stmt = $this->pdo->prepare("INSERT INTO categories (name, slug) VALUES (?, ?)");
         return $stmt->execute([$name, $slug]);
     }
-
-    public function getAllCategories(): array
-    {
+    
+    // Retrieve all categories
+    public function getAllCategories() {
         $stmt = $this->pdo->query("SELECT * FROM categories ORDER BY name ASC");
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-
-    public function getCategoryBySlug(string $slug): array|false
-    {
+    
+    // Retrieve a category by its slug
+    public function getCategoryBySlug($slug) {
         $stmt = $this->pdo->prepare("SELECT * FROM categories WHERE slug = ?");
         $stmt->execute([$slug]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
-
-    public function updateCategory(int $id, string $name, string $slug): bool
-    {
+    
+    // Update a category by its ID
+    public function updateCategory($id, $name, $slug) {
         $stmt = $this->pdo->prepare("UPDATE categories SET name = ?, slug = ? WHERE id = ?");
         return $stmt->execute([$name, $slug, $id]);
     }
-
-    public function deleteCategory(int $id): bool
-    {
+    
+    // Delete a category by its ID
+    public function deleteCategory($id) {
         $stmt = $this->pdo->prepare("DELETE FROM categories WHERE id = ?");
         return $stmt->execute([$id]);
     }
-
-    public function getAllCategorySlugs(): array
-    {
+    
+    /**
+     * Retrieve all allowed category slugs.
+     *
+     * @return array An array of category slugs.
+     */
+    public function getAllCategorySlugs(): array {
         $stmt = $this->pdo->query("SELECT slug FROM categories");
         $slugs = $stmt->fetchAll(PDO::FETCH_COLUMN, 0);
         return $slugs;
     }
 
-    public function getPostsByCategoryId(int $categoryId): array
-    {
+
+    /**
+     * Retrieve published posts associated with a given category ID.
+     *
+     * @param int $categoryId
+     * @return array
+     */
+    public function getPostsByCategoryId($categoryId) {
         $stmt = $this->pdo->prepare("SELECT p.* FROM posts p 
                                      JOIN post_categories pc ON p.id = pc.post_id 
                                      WHERE pc.category_id = ? AND p.status = 'published'
