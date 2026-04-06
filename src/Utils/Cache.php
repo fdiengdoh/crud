@@ -1,27 +1,19 @@
 <?php
-declare(strict_types=1);
+namespace App\Utils;
 
-namespace App;
+class Cache {
+    private $cacheDir;
+    private $ttl;
+    private $enabled;
 
-class Cache
-{
-    private string $cacheDir;
-    private int $ttl;
-    private bool $enabled;
-
-    /**
-     * Initialize cache with configuration.
-     *
-     * @param array $config Configuration array with keys: cache_dir, cache_ttl, cache_enabled
-     */
-    public function __construct(array $config): void
-    {
+    public function __construct($config) {
         $this->cacheDir = $config['cache_dir'];
         $this->ttl = $config['cache_ttl'];
         $this->enabled = $config['cache_enabled'];
 
-        // Ensure cache directory exists
+        // Ensure cache directory exists.
         if (!is_dir($this->cacheDir)) {
+            // Use 0775 for directory permissions as it's typically safer than 0777
             mkdir($this->cacheDir, 0775, true);
         }
     }
@@ -31,14 +23,14 @@ class Cache
      *
      * Example: "/2023/03/my-slug-file.html" becomes "{cacheDir}/2023/03/my-slug-file.html"
      *
-     * @param string $url The URL to cache
-     * @return string The cache file path
+     * @param string $url
+     * @return string
      */
-    public function getCacheFile(string $url): string
-    {
-        if ($url === '/' || $url === '') {
+    public function getCacheFile($url) {
+        if($url === '/' || $url === ''){
             $cacheFile = $this->cacheDir . '/home.html';
-        } else {
+        }else{
+            
             // Remove any leading slash from the URL
             $relativeUrl = ltrim($url, '/');
             // Build the full path by combining the cache directory and the relative URL path
@@ -46,6 +38,7 @@ class Cache
             // Ensure that the directory for the cache file exists
             $dir = dirname($cacheFile);
             if (!is_dir($dir)) {
+                // Ensure correct permissions (e.g., 0775)
                 mkdir($dir, 0775, true);
             }
         }
@@ -55,17 +48,14 @@ class Cache
     /**
      * Check if a cached file exists and is still valid.
      *
-     * @param string $url The URL to check
-     * @return bool True if cached and valid, false otherwise
+     * @param string $url
+     * @return bool
      */
-    public function isCached(string $url): bool
-    {
+    public function isCached($url) {
         if (!$this->enabled) {
             return false;
         }
-
         $file = $this->getCacheFile($url);
-        
         // Ensure the file exists before checking its modification time
         return file_exists($file) && (time() - filemtime($file) < $this->ttl);
     }
@@ -73,11 +63,10 @@ class Cache
     /**
      * Retrieve cached content.
      *
-     * @param string $url The URL to retrieve from cache
-     * @return string|false The cached content as a string, or false if not found, expired, or error
+     * @param string $url
+     * @return string|false The cached content as a string, or false if not found, expired, or error.
      */
-    public function getCache(string $url): string|false
-    {
+    public function getCache($url) {
         if (!$this->enabled) {
             return false;
         }
@@ -85,10 +74,11 @@ class Cache
         $file = $this->getCacheFile($url);
 
         if (!file_exists($file)) {
-            return false; // File does not exist, so it's a cache miss
+            return false; // File does not exist, so it's a cache miss.
         }
 
-        // Use @file_get_contents to suppress potential warnings if reading fails
+        // Use @file_get_contents to suppress potential warnings if reading somehow fails
+        // (though file_exists should prevent most "no such file" issues).
         $content = @file_get_contents($file);
 
         // If file_get_contents returns false (e.g., permission issue), treat as a miss
@@ -104,80 +94,71 @@ class Cache
     /**
      * Store content in cache.
      *
-     * @param string $url The URL to cache
-     * @param string $content The content to store
-     * @return bool True on success, false on failure
+     * @param string $url
+     * @param string $content
+     * @return bool True on success, false on failure.
      */
-    public function storeCache(string $url, string $content): bool
-    {
+    public function storeCache($url, $content) {
         if (!$this->enabled) {
             return false;
         }
-
         $file = $this->getCacheFile($url);
-
-        if (!file_exists(dirname($file))) {
-            mkdir(dirname($file), 0775, true);
-        }
-
-        if (@file_put_contents($file, $content) === false) {
-            error_log("Cache Error: Could not write to cache file: " . $file);
-            return false;
-        }
-
-        return true;
+        // file_put_contents returns bytes written or false on failure
+        return file_put_contents($file, $content) !== false;
     }
 
     /**
-     * Delete a specific cache file.
+     * Invalidate cache for a specific URL.
      *
-     * @param string $url The URL to delete from cache
-     * @return bool True on success, false on failure
+     * @param string $url
+     * @return bool True if file was deleted or didn't exist, false on error.
      */
-    public function deleteCache(string $url): bool
-    {
-        if (!$this->enabled) {
-            return false;
-        }
-
+    public function clearCache($url) {
         $file = $this->getCacheFile($url);
-
-        if (!file_exists($file)) {
-            return true; // Already doesn't exist, so consider it success
+        if (file_exists($file)) {
+            return unlink($file);
         }
-
-        if (!@unlink($file)) {
-            error_log("Cache Error: Could not delete cache file: " . $file);
-            return false;
-        }
-
-        return true;
+        return true; // Already gone or never existed
     }
 
     /**
-     * Clear all cache files.
-     *
-     * @return bool True on success, false on failure
+     * Clear all cached files recursively.
+     * @return bool True on complete success, false if any file/dir couldn't be deleted.
      */
-    public function clearCache(): bool
-    {
-        if (!$this->enabled) {
-            return false;
+    public function clearAllCache() {
+        $success = true;
+        if (!is_dir($this->cacheDir)) {
+            return true; // Nothing to clear if directory doesn't exist
         }
 
         $files = new \RecursiveIteratorIterator(
             new \RecursiveDirectoryIterator($this->cacheDir, \RecursiveDirectoryIterator::SKIP_DOTS),
             \RecursiveIteratorIterator::CHILD_FIRST
         );
-
-        foreach ($files as $file) {
-            if ($file->isDir()) {
-                @rmdir($file->getRealPath());
-            } else {
-                @unlink($file->getRealPath());
+    
+        foreach ($files as $fileinfo) {
+            if ($fileinfo->isFile()) {
+                if (!unlink($fileinfo->getRealPath())) {
+                    $success = false;
+                    error_log("Cache Error: Failed to delete file: " . $fileinfo->getRealPath());
+                }
+            } elseif ($fileinfo->isDir()) {
+                // @rmdir to suppress warning if dir is not empty (though CHILD_FIRST should handle this)
+                if (!@rmdir($fileinfo->getRealPath())) {
+                    $success = false;
+                    error_log("Cache Error: Failed to remove directory: " . $fileinfo->getRealPath());
+                }
             }
         }
-
-        return true;
+        
+        // Finally, try to remove the root cache directory itself if it's empty
+        // Only attempt if it still exists and is empty
+        if (is_dir($this->cacheDir) && count(glob($this->cacheDir . '/*')) === 0) {
+            if (!@rmdir($this->cacheDir)) {
+                $success = false;
+                error_log("Cache Error: Failed to remove root cache directory: " . $this->cacheDir);
+            }
+        }
+        return $success;
     }
 }
