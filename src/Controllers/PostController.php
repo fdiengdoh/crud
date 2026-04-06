@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 /*
  * This class will control queries related to posts, categories, users
  */
@@ -7,60 +9,54 @@ namespace App\Controllers;
 use App\Database;
 use PDO;
 
-class PostController {
+class PostController
+{
+    protected PDO $pdo;
 
-    protected $pdo;
-
-    public function __construct() {
+    public function __construct()
+    {
         $this->pdo = Database::getConnection();
     }
-    
+
     /**
      * Retrieve posts by user (if provided) with optional filtering.
      *
      * @param array    $options   If provided.
      * @return array
      */
-     public function index($options = []) {
+    public function index(array $options = []): array
+    {
         $params = [];
         
-        // Build base query with aliases
         $sql = "SELECT p.* FROM posts p";
         
-        // If a category filter is provided, add the JOIN
         if (!empty($options['category'])) {
             $sql .= " JOIN post_categories pc ON p.id = pc.post_id";
         }
         
-        // Build the WHERE clause conditions
         $where = [];
         
-        // Category condition
         if (!empty($options['category'])) {
             $where[] = "pc.category_id = ?";
             $params[] = $options['category'];
         }
         
-        // Status condition: use provided status or default to 'published'
         if (!empty($options['status'])) {
             $where[] = "p.status = ?";
             $params[] = $options['status'];
         }
         
-        // User filter if provided
         if (!empty($options['userId'])) {
             $where[] = "p.user_id = ?";
             $params[] = $options['userId'];
         }
         
-        // Append the WHERE clause if there are conditions
         if (count($where) > 0) {
             $sql .= " WHERE " . implode(" AND ", $where);
         }
         
         $sql .= " ORDER BY p.created_at DESC";
         
-        // Add limit if provided and valid
         if (!empty($options['limit']) && $options['limit'] > 0) {
             $sql .= " LIMIT " . (int)$options['limit'];
         }
@@ -69,7 +65,6 @@ class PostController {
         $stmt->execute($params);
         $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
-        // Process posts: generate excerpt and extract first image if no feature image
         foreach ($posts as &$post) {
             if (empty($post['feature_image'])) {
                 $extracted = $this->extractFirstImage($post['content']);
@@ -81,8 +76,8 @@ class PostController {
         return $posts;
     }
 
-    // Retrieve a single post by ID or slug, including author's username and profile details
-    public function show($identifier) {
+    public function show(int|string $identifier): array|false
+    {
         if (is_numeric($identifier)) {
             $stmt = $this->pdo->prepare("
                 SELECT 
@@ -100,7 +95,7 @@ class PostController {
                 LEFT JOIN categories c ON pc.category_id = c.id
                 WHERE p.id = ?
                 GROUP BY p.id
-                ");
+            ");
             $stmt->execute([$identifier]);
         } else {
             $stmt = $this->pdo->prepare("
@@ -119,22 +114,22 @@ class PostController {
                 LEFT JOIN categories c ON pc.category_id = c.id
                 WHERE p.slug = ?
                 GROUP BY p.id
-                ");
+            ");
             $stmt->execute([$identifier]);
         }
         $post = $stmt->fetch(PDO::FETCH_ASSOC);
-        $post ? $post['excerpt'] = $this->generateExcerpt($post['content']) : '';
-        // If there's no stored feature image, extract the first image from content.
-        if ($post && empty($post['feature_image'])) {
-            $extracted = $this->extractFirstImage($post['content']);
-            $post['og_image'] = $extracted ? $extracted : BASE_URL . '/assets/image/default-feature.webp';
+        if ($post) {
+            $post['excerpt'] = $this->generateExcerpt($post['content']);
+            if (empty($post['feature_image'])) {
+                $extracted = $this->extractFirstImage($post['content']);
+                $post['og_image'] = $extracted ?: BASE_URL . '/assets/image/default-feature.webp';
+            }
         }
         return $post;
     }
 
-    // Retrieve the previous published post relative to the current post (by created_at)
-    public function getPreviousPost($currentPostId) {
-        // First, fetch the current post's created_at value
+    public function getPreviousPost(int $currentPostId): array|false|null
+    {
         $stmt = $this->pdo->prepare("SELECT created_at FROM posts WHERE id = ?");
         $stmt->execute([$currentPostId]);
         $currentPost = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -142,22 +137,22 @@ class PostController {
             return null;
         }
         $currentCreatedAt = $currentPost['created_at'];
-        // Find the most recent post that was published before the current post
+        
         $stmt = $this->pdo->prepare("SELECT * FROM posts WHERE status = 'published' AND created_at < ? ORDER BY created_at DESC LIMIT 1");
         $stmt->execute([$currentCreatedAt]);
         $post = $stmt->fetch(PDO::FETCH_ASSOC);
-        $post ? $post['excerpt'] = $this->generateExcerpt($post['content']) : '';
-        // If there's no stored feature image, extract the first image from content.
-         if (isset($post['excerpt']) && empty($post['feature_image'])) {
-             $extracted = $this->extractFirstImage($post['content']);
-             $post['feature_image'] = $extracted ? $extracted : BASE_URL . '/assets/image/default-feature.webp';
-         }
+        if ($post) {
+            $post['excerpt'] = $this->generateExcerpt($post['content']);
+            if (empty($post['feature_image'])) {
+                $extracted = $this->extractFirstImage($post['content']);
+                $post['feature_image'] = $extracted ?: BASE_URL . '/assets/image/default-feature.webp';
+            }
+        }
         return $post;
     }
 
-    // Retrieve the next published post relative to the current post (by created_at)
-    public function getNextPost($currentPostId) {
-        // Fetch the current post's created_at value
+    public function getNextPost(int $currentPostId): array|false|null
+    {
         $stmt = $this->pdo->prepare("SELECT created_at FROM posts WHERE id = ?");
         $stmt->execute([$currentPostId]);
         $currentPost = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -165,15 +160,17 @@ class PostController {
             return null;
         }
         $currentCreatedAt = $currentPost['created_at'];
-        // Find the earliest post that was published after the current post
+        
         $stmt = $this->pdo->prepare("SELECT * FROM posts WHERE status = 'published' AND created_at > ? ORDER BY created_at ASC LIMIT 1");
         $stmt->execute([$currentCreatedAt]);
         $post = $stmt->fetch(PDO::FETCH_ASSOC);
-        $post ? $post['excerpt'] = $this->generateExcerpt($post['content']) : '';
-        if (isset($post['excerpt']) && empty($post['feature_image'])) {
-             $extracted = $this->extractFirstImage($post['content']);
-             $post['feature_image'] = $extracted ? $extracted : BASE_URL . '/assets/image/default-feature.webp';
-         }
+        if ($post) {
+            $post['excerpt'] = $this->generateExcerpt($post['content']);
+            if (empty($post['feature_image'])) {
+                $extracted = $this->extractFirstImage($post['content']);
+                $post['feature_image'] = $extracted ?: BASE_URL . '/assets/image/default-feature.webp';
+            }
+        }
         return $post;
     }
 
@@ -183,7 +180,8 @@ class PostController {
      * @param int $limit Number of recent posts to retrieve (default is 5).
      * @return array
      */
-    public function getRecentPosts($limit = 5) {
+    public function getRecentPosts(int $limit = 5): array
+    {
         $stmt = $this->pdo->prepare("
             SELECT * FROM posts 
             WHERE status = 'published'
@@ -194,18 +192,15 @@ class PostController {
         $stmt->execute();
         $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
-        // Generate an excerpt for each post if needed
         foreach ($posts as &$post) {
-            // If there's no stored feature image, extract the first image from content.
-             if (empty($post['feature_image'])) {
-                 $extracted = $this->extractFirstImage($post['content']);
-                 $post['feature_image'] = $extracted ? $extracted : BASE_URL . '/assets/image/default-feature.webp';
-             }
+            if (empty($post['feature_image'])) {
+                $extracted = $this->extractFirstImage($post['content']);
+                $post['feature_image'] = $extracted ?: BASE_URL . '/assets/image/default-feature.webp';
+            }
             $post['excerpt'] = $this->generateExcerpt($post['content']);
         }
         return $posts;
     }
-
 
     /**
      * Retrieve the most popular published posts, sorted by views.
@@ -213,8 +208,8 @@ class PostController {
      * @param int $limit Number of popular posts to retrieve.
      * @return array
      */
-    public function getPopularPosts($limit = 5) {
-        // Make sure $limit is an integer to prevent SQL injection
+    public function getPopularPosts(int $limit = 5): array
+    {
         $limit = (int)$limit;
         $query = "SELECT * FROM posts 
                 WHERE status = 'published'
@@ -223,18 +218,15 @@ class PostController {
         $stmt = $this->pdo->query($query);
         $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
-        // Generate excerpt for each post if needed
         foreach ($posts as &$post) {
-            // If there's no stored feature image, extract the first image from content.
-             if (empty($post['feature_image'])) {
-                 $extracted = $this->extractFirstImage($post['content']);
-                 $post['feature_image'] = $extracted ? $extracted : BASE_URL . '/assets/image/default-feature.webp';
-             }
+            if (empty($post['feature_image'])) {
+                $extracted = $this->extractFirstImage($post['content']);
+                $post['feature_image'] = $extracted ?: BASE_URL . '/assets/image/default-feature.webp';
+            }
             $post['excerpt'] = $this->generateExcerpt($post['content']);
         }
         return $posts;
     }
-
 
     /**
      * Increment the view count for a given post.
@@ -242,13 +234,14 @@ class PostController {
      * @param int $postId
      * @return bool
      */
-    public function incrementViews($postId) {
+    public function incrementViews(int $postId): bool
+    {
         $stmt = $this->pdo->prepare("UPDATE posts SET views = views + 1 WHERE id = ?");
         return $stmt->execute([$postId]);
     }
 
-
-    public function getPosts($category = 'all', $page = 1, $limit = 10) {
+    public function getPosts(string $category = 'all', int $page = 1, int $limit = 10): array
+    {
         $offset = ($page - 1) * $limit;
         if ($category !== 'all') {
             $stmt = $this->pdo->prepare("
@@ -278,13 +271,11 @@ class PostController {
         $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         foreach ($posts as &$post) {
-             // If there's no stored feature image, extract the first image from content.
-             if (empty($post['feature_image'])) {
-                 $extracted = $this->extractFirstImage($post['content']);
-                 $post['feature_image'] = $extracted ? $extracted : BASE_URL . '/assets/image/default-feature.webp';
-             }
-             // Generate an excerpt (assuming you have a method for that)
-             $post['excerpt'] = $this->generateExcerpt($post['content']);
+            if (empty($post['feature_image'])) {
+                $extracted = $this->extractFirstImage($post['content']);
+                $post['feature_image'] = $extracted ?: BASE_URL . '/assets/image/default-feature.webp';
+            }
+            $post['excerpt'] = $this->generateExcerpt($post['content']);
         }
         
         return $posts;
@@ -296,7 +287,8 @@ class PostController {
      * @param string|null $category Slug of the category, or null for all posts.
      * @return int
      */
-    public function countPosts($category = 'all') {
+    public function countPosts(string $category = 'all'): int
+    {
         if ($category !== 'all') {
             $stmt = $this->pdo->prepare("
                 SELECT COUNT(*) as total
@@ -320,41 +312,35 @@ class PostController {
      * @param int $length
      * @return string
      */
-    private function generateExcerpt($content, $length = 150) {
-        // Strip HTML tags and decode HTML entities
+    private function generateExcerpt(string $content, int $length = 150): string
+    {
         $text = strip_tags(html_entity_decode($content));
-    
-        // Trim to desired length
         return (strlen($text) > $length) ? substr($text, 0, $length) . '...' : $text;
     }
 
     /**
      * Create a new post with default status 'draft'.
-     * Allows optional manual entry for description, keywords, slug, creation date, and whether comments are allowed.
-     * If description is not provided, the first 100 characters of the content (stripped of HTML) are used.
      *
      * @param int    $userId
      * @param string $title
      * @param string $content
-     * @param string $slug          (optional) - if not provided, auto-generated from the title.
-     * @param string $featureImage  (optional) - defaults to null.
-     * @param string $description   (optional) - if not provided, auto-generated from content.
-     * @param string $keywords      (optional) - comma-separated keywords.
-     * @param string $createdAt     (optional) - if not provided, defaults to current timestamp.
-     * @param string $a_script      (optional)
-     * @param bool   $allowComments (optional) - whether comments are allowed (default: true).
+     * @param string|null $slug
+     * @param string|null $featureImage
+     * @param string $description
+     * @param string $keywords
+     * @param string|null $createdAt
+     * @param string|null $a_script
+     * @param bool   $allowComments
      * @return int Last inserted post ID.
      */
-    public function create($userId, $title, $content, $slug = null, $featureImage = null, $description = '', $keywords = '', $createdAt = null, $a_script = null, $allowComments = true) {
-        // Auto-generate slug if not provided.
+    public function create(int $userId, string $title, string $content, ?string $slug = null, ?string $featureImage = null, string $description = '', string $keywords = '', ?string $createdAt = null, ?string $a_script = null, bool $allowComments = true): int
+    {
         if (empty($slug)) {
             $slug = $this->slugify($title);
         }
-        // If description is not provided, use the first 100 characters of the content.
         if (empty($description)) {
             $description = substr(strip_tags($content), 0, 100);
         }
-        // Use provided creation date or default to current datetime.
         $createdAt = $createdAt ?? date('Y-m-d H:i:s');
         
         $stmt = $this->pdo->prepare("
@@ -363,58 +349,51 @@ class PostController {
             VALUES (?, ?, ?, ?, ?, ?, ?, 'draft', ?, ?, ?)
         ");
         $stmt->execute([$userId, $title, $content, $slug, $featureImage, $description, $keywords, $createdAt, $a_script, $allowComments]);
-        return $this->pdo->lastInsertId();
+        return (int)$this->pdo->lastInsertId();
     }
 
     /**
      * Update an existing post with additional fields.
-     * Allows optional manual update of the 'created_at' date and whether comments are allowed.
      *
      * @param int         $postId
      * @param string      $title
      * @param string      $content
-     * @param string|null $featureImage   If provided, update the feature image; otherwise, keep the current one.
-     * @param string      $slug           (Optional) Custom slug. Auto-generated from the title if empty.
-     * @param string      $description    (Optional) Custom description. Auto-generated from content if empty.
-     * @param string      $keywords       (Optional) Comma-separated keywords.
-     * @param string|null $createdAt      (Optional) New created_at datetime in 'Y-m-d H:i:s' format. If not provided, leaves the current value unchanged.
-     * @param string|null $a_script       (Optional)
-     * @param bool|null   $allowComments  (Optional) If provided, update whether comments are allowed.
+     * @param string|null $featureImage
+     * @param string      $slug
+     * @param string      $description
+     * @param string      $keywords
+     * @param string|null $createdAt
+     * @param string|null $a_script
+     * @param bool|null   $allowComments
      * @return bool
      */
-    public function update($postId, $title, $content, $featureImage = null, $slug = '', $description = '', $keywords = '', $createdAt = null, $a_script = null, $allowComments = null) {
-        // Auto-generate slug if not provided
+    public function update(int $postId, string $title, string $content, ?string $featureImage = null, string $slug = '', string $description = '', string $keywords = '', ?string $createdAt = null, ?string $a_script = null, ?bool $allowComments = null): bool
+    {
         if (empty($slug)) {
             $slug = $this->slugify($title);
         }
-        // Auto-generate description if not provided
         if (empty($description)) {
             $description = substr(strip_tags($content), 0, 100);
         }
         
-        // Build base SQL query and parameters array.
         $fields = "title = ?, content = ?, slug = ?, description = ?, keywords = ?, a_script = ?";
         $params = [$title, $content, $slug, $description, $keywords, $a_script];
         
-        // Conditionally update feature image if provided.
         if ($featureImage !== null) {
             $fields .= ", feature_image = ?";
             $params[] = $featureImage;
         }
         
-        // Conditionally update created_at if provided.
         if ($createdAt !== null) {
             $fields .= ", created_at = ?";
             $params[] = $createdAt;
         }
         
-        // Conditionally update allow_comments if provided.
         if ($allowComments !== null) {
             $fields .= ", allow_comments = ?";
             $params[] = $allowComments;
         }
         
-        // Always update updated_at to NOW().
         $fields .= ", updated_at = NOW()";
         $params[] = $postId;
         
@@ -422,20 +401,20 @@ class PostController {
         return $stmt->execute($params);
     }
 
-    // Instead of deleting, change post status to 'draft'
-    public function delete($postId) {
+    public function delete(int $postId): bool
+    {
         $stmt = $this->pdo->prepare("UPDATE posts SET status = 'draft', updated_at = NOW() WHERE id = ?");
         return $stmt->execute([$postId]);
     }
 
-    // Publish a post (set status to 'published')
-    public function publish($postId) {
+    public function publish(int $postId): bool
+    {
         $stmt = $this->pdo->prepare("UPDATE posts SET status = 'published', updated_at = NOW() WHERE id = ?");
         return $stmt->execute([$postId]);
     }
 
-    // Archive a post
-    public function archive($postId) {
+    public function archive(int $postId): bool
+    {
         $stmt = $this->pdo->prepare("UPDATE posts SET status = 'archive', updated_at = NOW() WHERE id = ?");
         return $stmt->execute([$postId]);
     }
@@ -447,12 +426,11 @@ class PostController {
      * @param array $categoryIds Array of category IDs.
      * @return void
      */
-    public function assignCategoriesToPost($postId, array $categoryIds) {
-        // Remove existing associations
+    public function assignCategoriesToPost(int $postId, array $categoryIds): void
+    {
         $stmt = $this->pdo->prepare("DELETE FROM post_categories WHERE post_id = ?");
         $stmt->execute([$postId]);
 
-        // Insert new associations
         $stmtInsert = $this->pdo->prepare("INSERT INTO post_categories (post_id, category_id) VALUES (?, ?)");
         foreach ($categoryIds as $catId) {
             $stmtInsert->execute([$postId, $catId]);
@@ -465,7 +443,8 @@ class PostController {
      * @param int $postId
      * @return array
      */
-    public function getCategoriesForPost($postId) {
+    public function getCategoriesForPost(int $postId): array
+    {
         $stmt = $this->pdo->prepare("SELECT c.* FROM categories c 
                                      JOIN post_categories pc ON c.id = pc.category_id 
                                      WHERE pc.post_id = ?");
@@ -479,9 +458,9 @@ class PostController {
      * @param string $htmlContent
      * @return string|null  Returns the src attribute of the first image, or null if none found.
      */
-    private function extractFirstImage(string $htmlContent): ?string {
+    private function extractFirstImage(string $htmlContent): ?string
+    {
         $doc = new \DOMDocument();
-        // Suppress errors due to malformed HTML
         @$doc->loadHTML($htmlContent);
         $images = $doc->getElementsByTagName('img');
         if ($images->length > 0) {
@@ -495,15 +474,12 @@ class PostController {
      *
      * @return array An array of post slugs.
      */
-    public function getAllSlugs(): array {
-        // Query for published posts only.
+    public function getAllSlugs(): array
+    {
         $stmt = $this->pdo->query("SELECT slug FROM posts WHERE status = 'published'");
-        // Fetch the slugs as a simple array.
         $slugs = $stmt->fetchAll(PDO::FETCH_COLUMN, 0);
         return $slugs;
     }
-
-
 
     /**
      * Helper function to generate a slug from text, with year and month directories.
@@ -511,29 +487,20 @@ class PostController {
      * @param string $text
      * @return string
      */
-    private function slugify($text) {
-        // Replace non-letter or digits by -
+    private function slugify(string $text): string
+    {
         $text = preg_replace('~[^\pL\d]+~u', '-', $text);
-        // Transliterate
         $text = iconv('utf-8', 'us-ascii//TRANSLIT', $text);
-        // Remove unwanted characters
         $text = preg_replace('~[^-\w]+~', '', $text);
-        // Trim
         $text = trim($text, '-');
-        // Remove duplicate -
         $text = preg_replace('~-+~', '-', $text);
-        // Lowercase
         $text = strtolower($text);
         
-        // Ensure we have something usable
         if (empty($text)) {
             $text = 'n-a';
         }
         
-        // Append the .html extension
         $slug = $text . '.html';
-        
-        // Prepend the current year and month as directories
         $year  = date('Y');
         $month = date('m');
         
