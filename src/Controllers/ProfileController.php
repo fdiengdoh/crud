@@ -1,30 +1,29 @@
 <?php
-// src/Controllers/ProfileController.php
+declare(strict_types=1);
 
 namespace App\Controllers;
 
 use App\Database;
 use PDO;
 
-class ProfileController {
+class ProfileController
+{
+    protected PDO $pdo;
 
-    protected $pdo;
-
-    public function __construct() {
+    public function __construct()
+    {
         $this->pdo = Database::getConnection();
     }
 
-    // Retrieve the profile for a given user ID
-    public function showProfile($userId) {
+    public function showProfile(int $userId): array|false
+    {
         $stmt = $this->pdo->prepare("SELECT * FROM user_profiles WHERE user_id = ?");
         $stmt->execute([$userId]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    // Retrieve the public profile for a given username.
-    // This method joins the user_profiles table with the users table
-    // to obtain the username along with profile details.
-    public function getProfileByUsername($username) {
+    public function getProfileByUsername(string $username): array|false
+    {
         $stmt = $this->pdo->prepare("
             SELECT up.*, u.username 
             FROM user_profiles up 
@@ -35,28 +34,26 @@ class ProfileController {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    // Create or update a profile for a given user ID
-    public function saveProfile($userId, $firstName, $lastName, $bio = null) {
+    public function saveProfile(int $userId, string $firstName, string $lastName, ?string $bio = null): bool
+    {
         $profile = $this->showProfile($userId);
         if ($profile) {
-            // Update existing profile
             $stmt = $this->pdo->prepare("UPDATE user_profiles SET first_name = ?, last_name = ?, bio = ?, updated_at = NOW() WHERE user_id = ?");
             return $stmt->execute([$firstName, $lastName, $bio, $userId]);
         } else {
-            // Insert new profile
             $stmt = $this->pdo->prepare("INSERT INTO user_profiles (user_id, first_name, last_name, bio, created_at) VALUES (?, ?, ?, ?, NOW())");
             return $stmt->execute([$userId, $firstName, $lastName, $bio]);
         }
     }
 
-    // Update profile picture for a given user ID
-    public function updateProfilePicture($userId, $profilePictureUrl) {
+    public function updateProfilePicture(int $userId, string $profilePictureUrl): bool
+    {
         $stmt = $this->pdo->prepare("UPDATE user_profiles SET profile_picture = ?, updated_at = NOW() WHERE user_id = ?");
         return $stmt->execute([$profilePictureUrl, $userId]);
     }
 
-    // Delete the profile for a given user ID
-    public function deleteProfile($userId) {
+    public function deleteProfile(int $userId): bool
+    {
         $stmt = $this->pdo->prepare("DELETE FROM user_profiles WHERE user_id = ?");
         return $stmt->execute([$userId]);
     }
