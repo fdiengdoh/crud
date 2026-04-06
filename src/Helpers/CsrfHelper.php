@@ -1,19 +1,13 @@
 <?php
-declare(strict_types=1);
-
 namespace App\Helpers;
 
-class CsrfHelper
-{
-    private static string $cookieName = 'csrf_token';
+class CsrfHelper {
+    private static $cookieName = 'csrf_token';
 
     /**
      * Generate/retrieve a token and sync it across Session and Cookie.
-     *
-     * @return string
      */
-    public static function getToken(): string
-    {
+    public static function getToken() {
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
@@ -33,7 +27,7 @@ class CsrfHelper
                 'path' => '/',
                 'domain' => '', // Set to your domain if across subdomains
                 'secure' => false,
-                'httponly' => false,
+                'httponly' => false, 
                 'samesite' => 'Lax',
             ]);
         }
@@ -43,12 +37,8 @@ class CsrfHelper
 
     /**
      * Validate the token against either the Session or the Cookie.
-     *
-     * @param string $token
-     * @return bool
      */
-    public static function isValid(string $token): bool
-    {
+    public static function isValid($token) {
         if (empty($token)) {
             return false;
         }
