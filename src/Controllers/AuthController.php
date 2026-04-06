@@ -1,15 +1,25 @@
 <?php
+declare(strict_types=1);
+
 namespace App\Controllers;
 
 use App\Database;
+use App\Mailer;
 use Delight\Auth\Auth;
 use Delight\Auth\Role;
-use App\Mailer;
+use Delight\Auth\AuthException;
+use PDO;
 
-class AuthController {
+/**
+ * Optimized for PHP 8.5
+ * Uses Strict Types, Asymmetric Visibility, and Match Expressions.
+ */
+final class AuthController {
 
-    protected Auth $auth;
-    protected \PDO $pdo;
+    // Asymmetric Visibility: Publicly readable, but only writable by this class.
+    // This allows $router to check $auth->isLoggedIn() without a getter method.
+    public private(set) Auth $auth;
+    public private(set) PDO $pdo;
 
     public function __construct() {
         $this->pdo = Database::getConnection();
@@ -18,38 +28,33 @@ class AuthController {
 
     /**
      * Register a new user.
-     *
-     * Sends a verification email via Mailer and assigns a default role of SUBSCRIBER.
      */
     public function register(string $email, string $username, string $password, ?string $verificationLink = null): string {
-        if (!$verificationLink) {
-            $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? "https://" : "http://";
-            $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-            $verificationLink = $protocol . $host . '/verify';
-        }
-
+        $verificationLink ??= $this->generateBaseUrl() . '/verify';
+        
         $emailStatusMessage = '';
+
         try {
-            $userId = $this->auth->register($email, $password, $username, function (string $selector, string $token) use (&$emailStatusMessage, string $email, string $username, string $verificationLink): void {
-                $verificationLink = $verificationLink . "/?selector=" . urlencode($selector) . "&token=" . urlencode($token);
+            $userId = $this->auth->register($email, $password, $username, function (string $selector, string $token) use (&$emailStatusMessage, $email, $username, $verificationLink) {
+                $link = "{$verificationLink}/?selector=" . urlencode($selector) . "&token=" . urlencode($token);
                 
-                $result = Mailer::sendVerificationEmail($email, $username, $verificationLink);
-                if ($result === true) {
-                    $emailStatusMessage = "A verification email has been sent to {$email}.";
-                } else {
-                    $emailStatusMessage = "Verification email could not be sent. " . $result;
-                }
+                $result = Mailer::sendVerificationEmail($email, $username, $link);
+                $emailStatusMessage = ($result === true) 
+                    ? "A verification email has been sent to {$email}." 
+                    : "Verification email could not be sent. " . $result;
             });
+
             $this->auth->admin()->addRoleForUserById($userId, Role::SUBSCRIBER);
             return "Registration successful. " . $emailStatusMessage;
-        } catch (\Delight\Auth\InvalidEmailException) {
-            return "Invalid email address.";
-        } catch (\Delight\Auth\InvalidPasswordException) {
-            return "Invalid password.";
-        } catch (\Delight\Auth\UserAlreadyExistsException) {
-            return "User already exists.";
-        } catch (\Delight\Auth\TooManyRequestsException) {
-            return "Too many requests. Please try again later.";
+
+        } catch (AuthException $e) {
+            return match (get_class($e)) {
+                \Delight\Auth\InvalidEmailException::class => "Invalid email address.",
+                \Delight\Auth\InvalidPasswordException::class => "Invalid password.",
+                \Delight\Auth\UserAlreadyExistsException::class => "User already exists.",
+                \Delight\Auth\TooManyRequestsException::class => "Too many requests. Please try again later.",
+                default => "An unknown registration error occurred."
+            };
         }
     }
 
@@ -57,24 +62,19 @@ class AuthController {
      * Log in an existing user.
      */
     public function login(string $email, string $password, bool $remember = false): string {
-        $rememberDuration = $remember ? (int) (60 * 60 * 24 * 365.25) : null;
         try {
-            $this->auth->login($email, $password, $remember);
+            // PHP 8.x handles the 'remember' boolean directly more efficiently
+            $this->auth->login($email, $password, $remember ? (int)(60 * 60 * 24 * 365) : null);
             return "success";
-        } catch (\Delight\Auth\InvalidEmailException) {
-            return "Invalid Credentials.";
-        } catch (\Delight\Auth\InvalidPasswordException) {
-            return "Invalid Credentials.";
-        } catch (\Delight\Auth\EmailNotVerifiedException) {
-            return "Email not verified.";
-        } catch (\Delight\Auth\TooManyRequestsException) {
-            return "Too many requests. Please try again later.";
+        } catch (AuthException $e) {
+            return match (get_class($e)) {
+                \Delight\Auth\EmailNotVerifiedException::class => "Email not verified.",
+                \Delight\Auth\TooManyRequestsException::class => "Too many requests.",
+                default => "Invalid Credentials." // Combined for security
+            };
         }
     }
 
-    /**
-     * Log out the current user.
-     */
     public function logout(): string {
         $this->auth->logOut();
         return "Logged out successfully.";
@@ -82,63 +82,51 @@ class AuthController {
 
     /**
      * Request a password reset.
-     *
-     * Sends a reset password email containing a reset link via Mailer.
      */
     public function forgotPassword(string $email, ?string $resetLink = null): string {
-        if (!$resetLink) {
-            $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? "https://" : "http://";
-            $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-            $resetLink = $protocol . $host . '/reset-password';
-        }
+        $resetLink ??= $this->generateBaseUrl() . '/reset-password';
+
         try {
-            $this->auth->forgotPassword($email, function (string $selector, string $token) use (&$resetLink, string $email): void {    
-                $resetLink = $resetLink . "/?selector=" . urlencode($selector) . "&token=" . urlencode($token);
+            $this->auth->forgotPassword($email, function (string $selector, string $token) use (&$resetLink) {  
+                $resetLink .= "/?selector=" . urlencode($selector) . "&token=" . urlencode($token);
             });
+
             $result = Mailer::sendResetPasswordEmail($email, $email, $resetLink);
-            if ($result === true) {
-                return "Password reset instructions have been sent to {$email}.";
-            } else {
-                return "Password reset instructions could not be sent. " . $result;
-            }
-        } catch (\Delight\Auth\InvalidEmailException) {
-            return "Invalid email address.";
-        } catch (\Delight\Auth\EmailNotVerifiedException) {
-            return "Email not verified.";
-        } catch (\Delight\Auth\ResetDisabledException) {
-            return "Password reset is disabled.";
-        } catch (\Delight\Auth\TooManyRequestsException) {
-            return "Too many requests. Please try again later.";
+            
+            return ($result === true) 
+                ? "Password reset instructions sent to {$email}." 
+                : "Reset instructions could not be sent. " . $result;
+
+        } catch (AuthException $e) {
+            return match (get_class($e)) {
+                \Delight\Auth\InvalidEmailException::class => "Invalid email address.",
+                \Delight\Auth\EmailNotVerifiedException::class => "Email not verified.",
+                \Delight\Auth\ResetDisabledException::class => "Password reset is disabled.",
+                default => "Too many requests. Please try again later."
+            };
         }
     }
 
-    /**
-     * Reset the user's password.
-     */
     public function resetPassword(string $selector, string $token, string $newPassword): string {
         try {
             $this->auth->resetPassword($selector, $token, $newPassword);
             return "Password reset successful.";
-        } catch (\Delight\Auth\InvalidSelectorTokenPairException) {
-            return "Invalid selector/token pair.";
-        } catch (\Delight\Auth\TokenExpiredException) {
-            return "Token expired.";
-        } catch (\Delight\Auth\ResetDisabledException) {
-            return "Password reset is disabled.";
-        } catch (\Delight\Auth\TooManyRequestsException) {
-            return "Too many requests. Please try again later.";
+        } catch (AuthException $e) {
+            return match (get_class($e)) {
+                \Delight\Auth\InvalidSelectorTokenPairException::class => "Invalid link.",
+                \Delight\Auth\TokenExpiredException::class => "Link expired.",
+                \Delight\Auth\ResetDisabledException::class => "Reset disabled.",
+                default => "Too many requests."
+            };
         }
     }
 
     /**
-     * Assign the admin role to a user by ID.
+     * Private helper to keep URL logic clean
      */
-    public function assignAdminRole(int $userId): string {
-        try {
-            $this->auth->admin()->addRoleForUserById($userId, Role::ADMIN);
-            return "Admin role assigned to user with ID: " . $userId;
-        } catch (\Exception $e) {
-            return "Error assigning admin role: " . $e->getMessage();
-        }
+    private function generateBaseUrl(): string {
+        $protocol = ($_SERVER['HTTPS'] ?? '') === 'on' ? "https://" : "http://";
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        return $protocol . $host;
     }
 }
