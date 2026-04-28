@@ -320,13 +320,32 @@ class PostController {
      * @param int $length
      * @return string
      */
-    private function generateExcerpt($content, $length = 150) {
+    /*private function generateExcerpt($content, $length = 150) {
         // Strip HTML tags and decode HTML entities
         $text = strip_tags(html_entity_decode($content));
     
         // Trim to desired length
         return (strlen($text) > $length) ? substr($text, 0, $length) . '...' : $text;
+    }*/
+    
+    private function generateExcerpt($content, $length = 30) {
+        // 1. Strip HTML tags
+        $text = strip_tags(html_entity_decode($content));
+    
+        // 2. Split text into an array of words
+        $words = explode(' ', $text);
+    
+        // 3. Take the first X words and join them back together
+        $excerpt = implode(' ', array_slice($words, 0, $length));
+    
+        // 4. Add ellipsis if text was longer than limit
+        if (count($words) > $length) {
+            $excerpt .= '...';
+        }
+    
+        return $excerpt;
     }
+
 
     /**
      * Create a new post with default status 'draft'.
